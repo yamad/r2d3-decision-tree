@@ -1,0 +1,9 @@
+import React from 'react';
+
+const Sample = ({ x, y }) => (
+      <circle cx={x} cy={y} r="2" />
+);
+
+Sample.propTypes = {
+
+}

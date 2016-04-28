@@ -1,0 +1,6 @@
+function flattenObjectHierarchy(root) {
+    if (root === undefined)
+        return [];
+    return _.flatMap(root.children, flattenObjectHierarchy)
+            .concat(root);
+}
