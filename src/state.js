@@ -14,9 +14,16 @@ const initialState = {
 		sample_hover_id: null,
 		tree_node_hover_id: null,
 		animation_extent: 0,
+		sample_radius: 1.8,
+		tree_offset: 7,
+		points: {
+			start: {},
+			end_target: {},
+			end_nontarget: {},
+		},
 		canvas: {
 		 	size:   { width: 600,
-			          height: 900 },
+			          height: 500 },
 			margin: { top: 10,
 			          bottom: 10,
 			          left: 10,
@@ -27,21 +34,21 @@ const initialState = {
 
 export const makeState = function(tree_data) {
 	let state = Object.assign({}, initialState);
-	const tree_lo  = d3.layout.tree().separation(() => 1);
+	let tree_lo  = d3.layout.tree().separation(() => 1);
 
 	let nodes = tree_lo.nodes(tree_data);
 	let links = tree_lo.links(nodes);
 
 	function normalizeNode(n) {
-		return Object.assign(
-			{ children : _.map(n.children, n => n.id),
-			  parent : n.parent ? n.parent.id : null
-			},
-			n);
+		return Object.assign({}, n,
+		                     { children : _.map(n.children, n => n.id),
+		                       parent : n.parent ? n.parent.id : null });
 	}
 
 	function childType(n) {
-		if (n.parent == null) return "root";
+		if (n.parent == null)
+			return "ROOT";
+
 		switch (n.id) {
 		case n.parent.children[0]:
 			return 'LEFT';
@@ -55,113 +62,48 @@ export const makeState = function(tree_data) {
 		}
 	}
 
+	nodes = _.map(nodes, n => Object.assign({}, n, { side : childType(n)}));
 	nodes = _.map(nodes, normalizeNode);
-	nodes = _.keyBy(nodes, n => n.id); // make map keyed by node id
 
-	state.tree.nodes = _.mapValues(nodes,
-	                               n => Object.assign({ side : childType(n)}, n));
+	state.tree.nodes = _.keyBy(nodes, n => n.id); // make map keyed by node id
 	state.tree.links = _.map(links, l => _.mapValues(l, n => n.id));
 	return state;
 };
 
-// memoized selectors
-const treeNodesSelector    = state => state.tree.nodes;
-const samplesSelector      = state => state.samples;
-const sampleSetsSelector   = state => state.samples_sets;
-const canvasSizeSelector   = state => state.canvas.size;
-const canvasMarginSelector = state => state.canvas.margin;
+// make a private set of selectors for state
+// TODO: is this necessary?
+export const makeSelector = () => {
+	let s = {
+		treeNodes	 : state => state.tree.nodes,
+		treeLinks	 : state => state.tree.links,
+		treeLeaves   : state => _.filter(_.values(state.tree.nodes),
+		                                 n => _.isEmpty(n.children)),
+		samples		 : state => state.samples,
+		sampleSets	 : state => state.samples_sets,
+		canvasSize	 : state => state.ui.canvas.size,
+		canvasMargin : state => state.ui.canvas.margin
+	};
 
-const get_xscaler = createSelector(
-	canvasSizeSelector,
-	canvasMarginSelector,
-	(size, margin) => {
-		const xm = margin.top + margin.bottom;
-		return d3.scale.linear()
-			.domain([0, 1])
-			.range([xm, size.width - xm]);}
-);
+	s.x_scaler = createSelector([ s.canvasSize, s.canvasMargin ],
+	                            (size, margin) => {
+		                            const xm = margin.top + margin.bottom;
+		                            return d3.scale.linear()
+			                            .domain([0, 1])
+			                            .range([xm, size.width - xm]);});
+	s.y_scaler = createSelector([ s.canvasSize, s.canvasMargin ],
+	                            (size, margin) => {
+		                            const ym = margin.left + margin.right;
+		                            return d3.scale.linear()
+			                            .domain([0, 1])
+			                            .range([ym, size.height - ym]);});
 
-const get_yscaler = createSelector(
-	canvasSizeSelector,
-	canvasMarginSelector,
-	(size, margin) => {
-		const ym = margin.left + margin.right;
-		return d3.scale.linear()
-			.domain([0, 1])
-			.range([ym, size.height - ym]);}
-);
-
-
-
-var ComputeTestTree = function(tree, test_set) {
-  var test_tree = _.assignIn({}, tree);
-  var test_stats = [];
-
-  var partitionFork = function(tree, data, depth) {
-    tree.samples = data.length;
-
-    // Partition based on if data is Target
-    var target = _.partition(data, function(d) {
-      return d.target > 0.5;
-    });
-
-    // Partition based on if data is above or below split
-    var split = _.partition(data, function(d) {
-      return d[tree.key] > parseFloat(tree.value);
-    });
-
-    // Compute Gini for Given Node
-    var isTargetLength = target[0].length/data.length;
-    var isNotTargetLength = target[1].length/data.length;
-    var gini = 1 - (isTargetLength*isTargetLength + isNotTargetLength*isNotTargetLength);
-
-    tree.gini = gini;
-
-    // Some additional Statistics about the data
-    var hasChildren = (split[0].length > 0 && split[1].length >0);
-    var max = _.max(data, function(d) {
-      return d[tree.key];
-    })[tree.key];
-    var min = _.min(data, function(d) {
-      return d[tree.key];
-    })[tree.key];
-
-    var stats = {
-      data : data,
-      data_rows : {
-        true : _.pluck(target[0], "index"),
-        false : _.pluck(target[1], "index")
-      },
-      has_children: hasChildren,
-      node: tree.id
-    }
-
-    test_stats[parseInt(stats.node)] = stats;
-
-    if(hasChildren) {
-      stats.attribute = tree.key,
-      stats.max_val = max;
-      stats.min_val = min;
-      stats.data_values = {
-        true : _.pluck(target[0], tree.key),
-        false : _.pluck(target[1], tree.key)
-      }
-      stats.split_location = {
-        left_side: split[1],
-        right_side: split[0]
-      }
-      stats.split_point = tree.value
-
-      partitionFork(tree.children[0], split[1], depth+1);
-      partitionFork(tree.children[1], split[0], depth+1);
-    }
-
-  }
-
-  partitionFork(test_tree, test_set, 0);
-
-  return {
-    tree: test_tree,
-    stats: test_stats
-  }
-}
+	const treeLineage = (nodes, id) => {
+		const n = nodes[id];
+		if (n.parent == null)
+			return [n];
+		return treeLineage(nodes, n.parent).concat(n);
+	};
+	s.treePaths = createSelector([ s.treeLeaves, s.treeNodes ],
+	                             (leaves, nodes) => _.map(leaves, n => treeLineage(nodes, n.id)));
+	return s;
+};
