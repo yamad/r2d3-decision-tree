@@ -19,4 +19,4 @@ Sample.propTypes = {
     circle: React.PropTypes.object;/* circle DOM object, via D3 */
 };
 
-export default Sample
+export default Sample;
