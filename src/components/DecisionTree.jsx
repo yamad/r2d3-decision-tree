@@ -1,15 +1,14 @@
 import React from 'react';
 import d3 from 'd3';
 import _ from 'lodash';
-import deepFreeze from 'deep-freeze';
 
-import ClassifierResults from './ClassifierResults.jsx';
-import { pointsToSVGLinePath, mapBy, interleave, link_angled_path, angled_path_midpoint, progressArray, progressDomain } from '../util.js';
+import { link_angled_path, progressArray } from '../util.js';
 import { makeState, makeSelector } from '../state.js';
 import { getRoot, getLeaves, getPaths, clean_r2d3_tree_data } from '../tree.js';
 
 import SampleSet from './SampleSet.jsx';
 import TreePath from './TreePath.jsx';
+import ClassifierResults from './ClassifierResults.jsx';
 
 /* A DecisionTree draws a binary classification decision tree */
 class DecisionTree extends React.Component {
