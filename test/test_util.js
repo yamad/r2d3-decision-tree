@@ -1,5 +1,20 @@
 import test from 'tape';
-import { pointsToSVGLinePath, mapBy, chunkBy, interleave } from '../src/util.js';
+import { pointsToSVGLinePath, mapBy, chunkBy, interleave,
+         progressArray, progressDomain, AssertionFailed } from '../src/util.js';
+
+function approx(t, a, b, msg) {
+	return t.ok(b - 1e-6 < a && a < b + 1e-6, msg);
+}
+
+function arraysApproxEqual(t, a, b, msg) {
+	msg = msg || "arrays should be equal";
+	const alen = a.length;
+	const blen = b.length;
+	t.equal(alen, blen);
+	a.forEach((v, k) => {
+		approx(t, v, b[k], msg);
+	}, this);
+}
 
 test('pointsToSVGLinePath', (t) => {
 	t.equal("",
@@ -112,7 +127,70 @@ test("intercalate", (t) => {
 
 	t.deepEqual([5,6,7,8],
 	            interleave([], [5,6,7,8]),
-	            "Given empty array B, return array A");
+	            "Given empty array A, return array B");
+
+	t.end();
+});
+
+test("progressDomain", (t) => {
+	t.throws(() => progressDomain(0, 0));
+	t.throws(() => progressDomain(0, -1));
+
+	t.deepEqual([0, 1], progressDomain(0, 1));
+
+	// 2 elements are evenly split
+	t.deepEqual([0, 0.5], progressDomain(0, 2));
+	t.deepEqual([0.5, 1], progressDomain(1, 2));
+
+	// 3 elements
+	arraysApproxEqual(t,
+	                  [0,     2/3],
+	                  progressDomain(0, 3));
+	arraysApproxEqual(t,
+	                  [(1/6), (1/6)+(2/3)],
+	                  progressDomain(1, 3));
+	arraysApproxEqual(t,
+	                  [(2/6), 1],
+	                  progressDomain(2, 3));
+
+	// 4 elements
+	arraysApproxEqual(t, [0, (3/4)],
+	                  progressDomain(0, 4));
+	arraysApproxEqual(t,
+	                  [(1/12), (1/12)+(3/4)],
+	                  progressDomain(1, 4));
+	arraysApproxEqual(t,
+	                  [(2/12), (2/12)+(3/4)],
+	                  progressDomain(2, 4));
+	arraysApproxEqual(t,
+	                  [(3/12), (3/12)+(3/4)],
+	                  progressDomain(3, 4));
+
+	t.end();
+});
+
+test("progressArray", (t) => {
+	t.deepEqual([], progressArray(0, 0),
+	            "Given zero elements, returns empty array");
+	t.deepEqual([], progressArray(0, -1),
+	            "Given invalid n, return empty array");
+	t.deepEqual([0], progressArray(0, 1),
+	            "Given 1 element and no progress, return zero progress");
+	t.deepEqual([1], progressArray(1, 1),
+	            "Given 1 element and complete progress, all elements complete");
+
+	t.deepEqual([0.5], progressArray(0.5, 1),
+	            "One element follows global progress");
+
+
+	t.deepEqual([0, 0], progressArray(0, 2),
+	            "Given >1 element and no progress, return zero progress");
+	t.deepEqual([1, 0], progressArray(0.5, 2),
+	            ">1 elements split progress evenly");
+	t.deepEqual([1, 1], progressArray(1, 2),
+	            "Given >1 element and complete progress, all elements complete");
+
+	t.deepEqual([0.75, 0.5, 0.25], progressArray(0.5, 3));
 
 	t.end();
 });

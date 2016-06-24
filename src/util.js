@@ -1,5 +1,18 @@
 import _ from 'lodash';
 
+
+// assertion utility code from Eloquent Javascript
+export function AssertionFailed(message) {
+  this.message = message;
+}
+AssertionFailed.prototype = Object.create(Error.prototype);
+
+function assert(test, message) {
+  if (!test)
+    throw new AssertionFailed(message);
+}
+
+
 // return list of all child objects of root
 export const flattenObjectHierarchy = (root) => {
 	if (root === undefined) return [];
@@ -193,4 +206,48 @@ export function make_hex_lattice_rhombus(unit_width, unit_height, spacing,
         return { 'x' : base_x + p.x,
                  'y' : base_y + p.y };
     };
-};
+}
+
+/** return list of `n` progress markers for master progress value `progress`
+ */
+// TODO: there is probably a shortcut more efficient way to map
+// between parent progress and child progress
+export function progressArray(progress, n, nspan) {
+	nspan = nspan || undefined;
+	if (n < 1) return [];
+	return _.map(Array(n), (_, i) => {
+		const domain = progressDomain(i, n, nspan);
+		const normed = normalize(progress, domain[0], domain[1]);
+		return normed;
+	});
+}
+
+/** create domain for function mapping a portion of a parent progress
+ * to local progress [0, 1]
+
+creates even spacing for `n` elements, returning the domain for the
+`kth` element (0-indexed).
+
+e.g. given an animation of 2 elements, the global progress runs from 0
+to 1 and each element's animation runs for a portion of that. this
+function determines the portion during which the sub-element runs.
+*/
+export function progressDomain(k, n, distance) {
+	assert(k < n, "element k must be from 0 to n-1");
+
+	// guard divide-by-zero errors
+	if (n < 1)  return [0, 0];
+	if (n == 1) return [0, 1];
+
+	let interval = 1 / n;
+	distance = distance || (1 - interval);
+	interval = 1 - distance;
+
+	const s = k * (interval / (n-1));
+	return [ s, s + distance ];
+}
+
+
+function normalize(x, lo, hi) {
+	return _.clamp((x - lo) / (hi - lo), 0, 1);
+}
