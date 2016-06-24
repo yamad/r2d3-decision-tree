@@ -1,22 +1,41 @@
 import React from 'react';
 
 /* A Sample represents one example/unit in a dataset */
-const Sample = ({ x, y }) => (
-    <circle cx={x} cy={y} r="2" />
-);
+class Sample extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = { p: { x:0, y:0 } ,
+		               progress: this.props.progress };
+	}
+
+	render() {
+		return <circle cx={this.state.p.x} cy={this.state.p.y} ref="circle" r="2" fill="red" />;
+	}
+
+	// need SVG path DOM element to calculate position, so have to
+	// re-render after DOM objects have been created
+	componentDidMount() {
+		this.updatePosition();
+	}
+
+	componentWillReceiveProps(newProps) {
+		this.setState({ progress: newProps.progress });
+		this.updatePosition();
+	}
+
+	updatePosition() {
+		let path = document.getElementById("path-5");
+		let dist = this.state.progress * path.getTotalLength();
+		const p = path.getPointAtLength(dist);
+		this.refs.circle.setAttribute('cx', p.x);
+		this.refs.circle.setAttribute('cy', p.y);
+//		this.setState({ p : p });
+	}
+}
 
 Sample.propTypes = {
-    x: React.PropTypes.number.isRequired,
-    y: React.PropTypes.number.isRequired,
-    /* these properties are set in the original Backbone version. as
-    we figure out what they are for, we'll move them to the right
-    place for React */
-    groupID: React.PropTypes.number,/* sample set identifier */
-    attributes: React.PropTypes.object,/* example information */
-    waypoints: React.PropTypes.arrayOf(React.PropTypes.object);
-    treeCoordinates: React.PropTypes.arrayOf(React.PropTypes.object);
-    path: React.PropTypes.object; /* path through tree DOM object, via D3 */
-    circle: React.PropTypes.object;/* circle DOM object, via D3 */
+	progress: React.PropTypes.number.isRequired
+//	pathID: React.PropTypes.number
 };
 
 export default Sample;
