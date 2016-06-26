@@ -190,7 +190,7 @@ test("progressArray", (t) => {
 	t.deepEqual([1, 1], progressArray(1, 2),
 	            "Given >1 element and complete progress, all elements complete");
 
-	t.deepEqual([0.75, 0.5, 0.25], progressArray(0.5, 3));
+	arraysApproxEqual(t, [0.75, 0.5, 0.25], progressArray(0.5, 3));
 
 	t.end();
 });
