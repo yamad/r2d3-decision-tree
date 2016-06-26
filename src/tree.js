@@ -14,7 +14,6 @@ export const getLeaves = (nodes) => _.pickBy(nodes, isLeaf);
 export const getPaths  = (nodes) => _.mapValues(getLeaves(nodes),
                                                 _.curry(treeLineage)(nodes));
 
-
 const toId           = (a) => a.id;
 const mapToId        = (nodes) => _.map(nodes, toId);
 const splitOnTarget  = (nodes) => _.partition(nodes, (n) => n.target);

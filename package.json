@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "tape -r babel-register test/**/*.js | tap-spec",
-    "start": "npm run open:src",
-    "open:src": "babel-node tools/srcServer.js"
+    "test-only": "tape -r babel-register",
+    "start": "npm run open-src",
+    "open-src": "babel-node tools/srcServer.js"
   },
   "author": "Jason Yamada-Hanff",
   "license": "ISC",
@@ -33,6 +34,7 @@
     "babel-register": "^6.7.2",
     "browser-sync": "^2.12.3",
     "chai": "^3.5.0",
+    "devtool": "^2.0.2",
     "eslint": "^2.8.0",
     "eslint-loader": "^1.3.0",
     "eslint-plugin-react": "^4.3.0",

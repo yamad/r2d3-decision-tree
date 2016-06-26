@@ -63,13 +63,13 @@ export function clean_r2d3_tree_data(raw) {
 	const isRoot = (n) => _.isUndefined(n.parent);
 
 	// flatten embedded child nodes into a list
-	const flatten = (root) => {
+	const flattenTree = (root) => {
 		if (isLeaf(root)) return [root];
 
 		// more to do. recurse through children
 		const assignParent = (n) => _.assign({ parent : root}, n);
-		_.map(root.children, assignParent);
-		return [root].concat(_.flatMap(root.children, flatten));
+		root.children = _.map(root.children, assignParent);
+		return [root].concat(_.flatMap(root.children, flattenTree));
 	};
 
 	// replace direct references with ids. works on single node
@@ -104,6 +104,7 @@ export function clean_r2d3_tree_data(raw) {
 		//
 		// in leaf nodes, `value` is an array giving sample counts for
 		// A/B classification.
+		if (n.value == null) throw new Error("Invalid tree input: no value on node");
 		a.sample_counts = n.value;
 		a.target = n.value[0] > n.value[1];
 
@@ -136,7 +137,7 @@ export function clean_r2d3_tree_data(raw) {
 
 	// in-place mutations
 	let tree = _.assign({}, raw);
-	tree = flatten(tree);		       // make list, always first step
+	tree = flattenTree(tree);		// make list, always first step
 	tree = tree.map(addType);
 	tree = tree.map(transformNode);
 	tree = tree.map(normalizeNode); // normalize, always last step
