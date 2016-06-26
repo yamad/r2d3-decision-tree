@@ -24,7 +24,7 @@ const TreePath = ( { id, path, isTarget, xscale, yscale } ) => {
 		      .concat([tree_dst, result_src]);
 	const svg_path = pointsToSVGLinePath(full_path);
 
-	return <path d={svg_path} stroke="none" fill="none" id={"path-"+id} />;
+	return <path d={svg_path} stroke="blue" fill="none" id={"path-"+id} />;
 };
 
 export default TreePath;

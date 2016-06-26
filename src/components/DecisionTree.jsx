@@ -1,10 +1,8 @@
 import React from 'react';
-import d3 from 'd3';
 import _ from 'lodash';
 
 import { link_angled_path, progressArray } from '../util.js';
 import { makeState, makeSelector } from '../state.js';
-import { getRoot, getLeaves, getPaths, clean_r2d3_tree_data } from '../tree.js';
 
 import SampleSet from './SampleSet.jsx';
 import TreePath from './TreePath.jsx';
@@ -20,43 +18,23 @@ class DecisionTree extends React.Component {
 	}
 
 	render() {
-		const tree_data = this.props.tree_data;
-		const state = makeState(tree_data);
+		const tree = this.props.tree;
+		const state = makeState();
 		const selector = makeSelector();
-		let nodes = clean_r2d3_tree_data(tree_data);
 
 		const x_scale = selector.x_scaler(state),
 		      y_scale = selector.y_scaler(state);
 		const { width, height } = selector.canvasSize(state);
 
-		// use d3 to calculate node positions.
-		//
-		// collect positions from d3.layout.tree().nodes() but avoid
-		// mutations by copying the tree before d3 gets it.
-		const findPoints = (nodes) => {
-			const clone_nodes = _.cloneDeep(nodes);
-			const layout = d3.layout.tree()
-				      .separation(() => 1)
-				      .children((d) => _.map(d.children, (a) => clone_nodes[a]));
-
-			const tree_nodes = layout.nodes(getRoot(clone_nodes)); // destructive change!
-
-			// node position points keyed by node id
-			const points = _.keyBy(_.map(tree_nodes, n => _.pick(n, ['id', 'x', 'y'])), 'id');
-
-			// all links for tree, ids instead of direct references
-			const links  = _.map(layout.links(tree_nodes), l => _.mapValues(l, a => a.id));
-			return [ points, links ];
-		};
-
-		const [ points, tree_links ] = findPoints(nodes);
 		// add calculated point to each node
-		const tree_nodes = _.mapValues(nodes, n => _.merge(n, points[n.id]));
-		const tree_leaves = getLeaves(tree_nodes);
-		const tree_paths  = getPaths(tree_nodes);
+		const tree_nodes  = tree.nodes;
+		const tree_paths  = tree.paths;
 
-		const nodeToPoint   = (node) => ({ x : x_scale(node.x),
-		                                   y : y_scale(node.y) });
+		const nodeToPoint = (node) => {
+			const p = tree.points[node.id];
+			return { x : x_scale(p.x),
+			         y : y_scale(p.y) };
+		};
 		const nodesToPoints = (nids) => nids.map(nid => nodeToPoint(tree_nodes[nid]));
 		const treePathsPoints = _.mapValues(tree_paths, nodesToPoints);
 
@@ -64,8 +42,8 @@ class DecisionTree extends React.Component {
 		const TreeNode = ({ node }) => <circle cx={x_scale(node.x)} cy={y_scale(node.y)} r={state.ui.sample_radius} />;
 
 		const TreeLeaf = ({ leaf }) => {
-			let x = x_scale(leaf.x);
-			let y = y_scale(leaf.y) - 14;
+			let x = x_scale(tree.points[leaf.id].x);
+			let y = y_scale(tree.points[leaf.id].y) - 14;
 
 			if (leaf.type === 'LEFT')  x += state.ui.tree_offset-1;
 			if (leaf.type === 'RIGHT') x -= state.ui.tree_offset+1;
@@ -90,11 +68,11 @@ class DecisionTree extends React.Component {
 			</g>;
 		}
 
-		const TreeLinkList = ({ state, links }) =>
+		const TreeLinkList = ({ links }) =>
 			      <g className="links">
 			      {links.map(l => <TreeLink key={l.source+"-"+l.target}
-			                 src={nodes[l.source]}
-			                 dst={nodes[l.target]} />)}
+			                 src={tree.points[l.source]}
+			                 dst={tree.points[l.target]} />)}
 		</g>;
 
 		const TreeLeafList = ({ leaves }) =>
@@ -110,6 +88,7 @@ class DecisionTree extends React.Component {
 		const sideA = { 'correct': 10,
 		                'total'  : 20,
 		                'samples' : [] };
+
 		const sideB = { 'correct': 192,
 		                'total'  : 200,
 		                'samples' : [] };
@@ -122,8 +101,8 @@ class DecisionTree extends React.Component {
 		return (
 			<svg width={width} height={height}>
 			  <g className="decision-tree">
-				<TreeLinkList links={_.values(tree_links)} />
-				<TreeLeafList leaves={_.values(tree_leaves)} />
+				<TreeLinkList links={_.values(tree.links)} />
+				<TreeLeafList leaves={_.values(tree.leaves)} />
 				<TreePathList paths={treePathsPoints} />
 				<SampleSet samples={samples} name="test" />
 				<ClassifierResults width={width} x="10" y="600" sideA={sideA} sideB={sideB} />

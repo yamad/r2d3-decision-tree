@@ -1,11 +1,12 @@
 import _ from 'lodash';
 import { createSelector } from 'reselect';
+import { observable } from 'mobx';
+import { clean_r2d3_tree_data } from './tree.js';
 import d3 from 'd3';
 
 const initialState = {
 	tree: {
-		nodes: {},
-		links: []
+		nodes: {}
 	},
 	samples: [],
 	sample_sets: {},
@@ -32,50 +33,17 @@ const initialState = {
 	}
 };
 
-export const makeState = function(tree_data) {
+export const makeState = function() {
 	let state = Object.assign({}, initialState);
-	let tree_lo  = d3.layout.tree().separation(() => 1);
-
-	let nodes = tree_lo.nodes(tree_data);
-	let links = tree_lo.links(nodes);
-
-	function normalizeNode(n) {
-		return Object.assign({}, n,
-		                     { children : _.map(n.children, n => n.id),
-		                       parent : n.parent ? n.parent.id : null });
-	}
-
-	function childType(n) {
-		if (n.parent == null)
-			return "ROOT";
-
-		switch (n.id) {
-		case n.parent.children[0]:
-			return 'LEFT';
-			break;
-		case n.parent.children[1]:
-			return 'RIGHT';
-			break;
-		default:
-			return 'UKNOWN';
-			break;
-		}
-	}
-
-	nodes = _.map(nodes, n => Object.assign({}, n, { side : childType(n)}));
-	nodes = _.map(nodes, normalizeNode);
-
-	state.tree.nodes = _.keyBy(nodes, n => n.id); // make map keyed by node id
-	state.tree.links = _.map(links, l => _.mapValues(l, n => n.id));
 	return state;
 };
+
 
 // make a private set of selectors for state
 // TODO: is this necessary?
 export const makeSelector = () => {
 	let s = {
 		treeNodes	 : state => state.tree.nodes,
-		treeLinks	 : state => state.tree.links,
 		treeLeaves   : state => _.filter(_.values(state.tree.nodes),
 		                                 n => _.isEmpty(n.children)),
 		samples		 : state => state.samples,
@@ -83,6 +51,9 @@ export const makeSelector = () => {
 		canvasSize	 : state => state.ui.canvas.size,
 		canvasMargin : state => state.ui.canvas.margin
 	};
+
+	s.treeLinks = createSelector([ s.treeNodes ],
+	                             (nodes) => d3.layout.tree().links(nodes));
 
 	s.x_scaler = createSelector([ s.canvasSize, s.canvasMargin ],
 	                            (size, margin) => {

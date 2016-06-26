@@ -2,154 +2,11 @@
 import _ from 'lodash';
 import fp from 'lodash/fp';
 import deepFreeze from 'deep-freeze';
+import d3 from 'd3';
 
-const make_r2d3_fork_node = () => ({
-	id:       null,			// unique node id
-	samples:  0,			// sample count
-	key:     "",			// factor name
-	value:    0,			// factor split point
-	gini:	  0,			// gini index for calculating split
-	children: []			// descendant tree nodes, direct refs
-});
-
-const make_r2d3_leaf_node = () => ({
-	id:        null,		// unique node id
-	samples:   1,			// sample count
-	value:     [0, 0],		// sample counts per class
-	impurity:  0,			// *not used
-	criterion: "gini"		// *not used
-});
-
-const makeForkNode = () => ({
-	id:          null,		// unique node id
-	type:        "",		// type, ROOT/LEFT/RIGHT
-	leaf:        false,		// true if a leaf node
-	samples:     0,			// sample count
-	split_key:   "",		// split factor name
-	split_point: 0,			// split factor value
-	parent:      null,      // parent node id
-	children:    []			// descendant tree nodes, ids
-});
-
-const makeLeafNode = () => ({
-	id:            null,	 // unique node id
-	type:          "",		 // type, ROOT/LEFT/RIGHT
-	leaf:          true,	 // true if a leaf node
-	samples:       0,		 // sample count
-	sample_counts: [0, 0],	 // number of classified target/non-target samples
-	target:		   false,	 // clasifies target or non-target samples?
-	parent:        null,     // parent node id
-	children:      null		 // descendant tree nodes, ids
-});
-
-// assign values from source object to destination object, for all
-// (shallow) attributes that exist in both.
-const deriveObject = (dst, src) => {
-	_.forIn(dst, (value, key) => {
-		if (_.has(src, key)) dst[key] = src[key];
-	});
-	return dst;
-};
-
-// clean/normalize/prepare R2D3 tree data
-//
-// returns a map (object) of nodes keyed by id. references to
-// parent/child nodes are normalized (by id, not direct reference)
-//
-// expects a single root node with all descendant nodes in the
-// 'children' attribute, as shown in `tree_data` of
-// `tree-training-set-98.js` file. all functions operate on
-// denormalized data.
-export function clean_r2d3_tree_data(raw) {
-	const isLeaf = (n) => _.isUndefined(n.children);
-	const isRoot = (n) => _.isUndefined(n.parent);
-
-	// flatten embedded child nodes into a list
-	const flatten = (root) => {
-		if (isLeaf(root)) return [root];
-
-		// more to do. recurse through children
-		const assignParent = (n) => _.assign({ parent : root}, n);
-		_.map(root.children, assignParent);
-		return [root].concat(_.flatMap(root.children, flatten));
-	};
-
-	// replace direct references with ids. works on single node
-	const normalizeNode = (node) => {
-		if (!_.isNull(node, 'children') && !_.isEmpty(node, 'children'))
-			node.children = _.map(node.children, c => parseInt(c.id));
-		if (!_.isNull(node.parent))
-			node.parent   = parseInt(node.parent.id);
-		return node;
-	};
-
-	// split type of child (left, right, root). works on denormalized data
-	// precalculating now avoids tree traversal (and implicit ordering)
-	const addType = (n) => {
-		if (isRoot(n))
-			n.type = 'ROOT';
-		else if (n == n.parent.children[0])
-			n.type = 'LEFT';
-		else if (n == n.parent.children[1])
-			n.type = 'RIGHT';
-		else
-			n.type = 'UNKNOWN';
-		return n;
-	};
-
-	// assign useful attributes to a leaf node
-	//
-	const transformLeafNode = (n) => {
-		let a = deriveObject(makeLeafNode(), n);
-
-		// rename vague attribute names
-		//
-		// in leaf nodes, `value` is an array giving sample counts for
-		// A/B classification.
-		a.sample_counts = n.value;
-		a.target = n.value[0] > n.value[1];
-
-		// parse strings into numbers
-		a.id = parseInt(n.id);
-		a.samples = parseInt(n.samples);
-		return a;
-	};
-
-	// assign useful attributes to a fork node (non-leaf node)
-	const transformForkNode = (n) => {
-		let a = deriveObject(makeForkNode(), n);
-
-		// rename vague attribute names
-		a.split_key   = n.key;
-		a.split_point = parseFloat(n.value);
-
-		// parse strings into numbers
-		a.id      = parseInt(n.id);
-		a.samples = parseInt(n.samples);
-		return a;
-	};
-
-	const transformNode = (n) => {
-		if (isLeaf(n))
-			return transformLeafNode(n);
-		else
-			return transformForkNode(n);
-	};
-
-	// in-place mutations
-	let tree = _.assign({}, raw);
-	tree = flatten(tree);		       // make list, always first step
-	tree = tree.map(addType);
-	tree = tree.map(transformNode);
-	tree = tree.map(normalizeNode); // normalize, always last step
-	return _.keyBy(tree, 'id');
-};
-
-
-
+import { clean_r2d3_tree_data } from './tree_clean.js';
 
 // methods for cleaned trees
-
 export const isRoot    = (node) => _.isNull(node.parent);
 export const isLeaf    = (node) => node.leaf;
 export const getRoot   = (nodes) => _.head(_.values(_.pickBy(nodes, isRoot)));
@@ -157,9 +14,28 @@ export const getLeaves = (nodes) => _.pickBy(nodes, isLeaf);
 export const getPaths  = (nodes) => _.mapValues(getLeaves(nodes),
                                                 _.curry(treeLineage)(nodes));
 
+
 const toId           = (a) => a.id;
 const mapToId        = (nodes) => _.map(nodes, toId);
 const splitOnTarget  = (nodes) => _.partition(nodes, (n) => n.target);
+
+const makeLink = ( src_id, dst_id ) => {
+	return { source : src_id, target : dst_id };
+};
+
+// find relative point locations and key by node
+const findPoints = (nodes) => {
+	const clone_nodes = _.cloneDeep(nodes);
+	const layout = d3.layout.tree()
+		      .separation(() => 1)
+		      .children((d) => _.map(d.children, (a) => clone_nodes[a]));
+
+	const tree_nodes = layout.nodes(getRoot(clone_nodes)); // destructive change!
+
+	// node position points keyed by node id
+	const points = _.keyBy(_.map(tree_nodes, n => _.pick(n, ['id', 'x', 'y'])), 'id');
+	return points;
+};
 
 // constructor for decision trees
 export const makeDecisionTree = (raw_tree) => {
@@ -173,8 +49,12 @@ export const makeDecisionTree = (raw_tree) => {
 	dt.nodes    = nodes;
 	dt.fnodes   = frozen_nodes;
 
+	dt.links   = _.flatMap(_.values(frozen_nodes),
+	                       (n) => _.map(n.children, _.curry(makeLink)(n.id)));
+	dt.points  = findPoints(frozen_nodes);
+
 	dt.leafIDs = _.zipObject(['target', 'nontarget'],
-	                          fp.map(mapToId)(splitOnTarget(dt.leaves)));
+	                         fp.map(mapToId)(splitOnTarget(dt.leaves)));
 
 	// all paths through the tree. how to get to each leaf. note that
 	// there is only one path to any leaf.
@@ -252,7 +132,3 @@ const makeSampleSetUI = () => {
 		            y: 0 }
 	};
 };
-
-// sample.leaf_id
-// sample.class
-// sample.
