@@ -100,11 +100,6 @@ class DecisionTree extends React.Component {
 			      {leaves.map(l => <TreeLeaf key={"leaf-"+l.id} leaf={l} />)}
 		</g>;
 
-		const TreeNodeList = ({ nodes }) =>
-			      <g classNames="nodes">
-			      {nodes.map(n => <TreeNode key={"node-"+n.id} node={n} />)}
-		</g>;
-
 		const sideA = { 'correct': 10,
 		                'total'  : 20,
 		                'samples' : [] };

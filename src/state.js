@@ -1,7 +1,5 @@
 import _ from 'lodash';
 import { createSelector } from 'reselect';
-import { observable } from 'mobx';
-import { clean_r2d3_tree_data } from './tree.js';
 import d3 from 'd3';
 
 const initialState = {
