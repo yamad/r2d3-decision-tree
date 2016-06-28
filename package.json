@@ -4,7 +4,7 @@
   "description": "A clone of the r2d3.us decision tree diagram",
   "main": "index.js",
   "scripts": {
-    "test": "tape -r babel-register test/**/*.js | tap-spec",
+    "test": "tape -r babel-register test/**/*.js | tap-dot",
     "test-only": "tape -r babel-register",
     "start": "npm run open-src",
     "open-src": "babel-node tools/srcServer.js"
@@ -45,6 +45,7 @@
     "mobx": "^2.3.3",
     "mobx-react": "^3.4.0",
     "mocha": "^2.4.5",
+    "tap-dot": "^1.0.5",
     "tap-spec": "^4.1.1",
     "tape": "^4.5.1",
     "webpack": "^1.13.0",
