@@ -1,7 +1,7 @@
 import React from 'react';
 import _ from 'lodash';
 
-import { link_angled_path, progressArray, mapBy, interleave, angled_path_midpoint } from '../util.js';
+import { link_angled_path, progressArray, mapBy, interleave, angled_path_midpoint, make_hex_lattice_rhombus } from '../util.js';
 import { makeState, makeSelector } from '../state.js';
 
 import SampleSet from './SampleSet.jsx';
@@ -109,8 +109,31 @@ class DecisionTree extends React.Component {
 		                'samples' : [] };
 
 
-		// test
-		const treeProgress = progressArray(this.state.progress, samples.length, 0.2);
+		// sample preparation
+		const treeProgress = progressArray(this.state.progress, samples.samples.length, 0.2);
+
+		const placementOrigin = "BOTTOM_LEFT";
+		const placementOrient = "SKEW_LEFT";
+		const placeTargets = make_hex_lattice_rhombus(4, 4, 2, x_scale(0),
+		                                              y_scale(state.ui.extent.results_training.max) - 5,
+		                                              placementOrigin,
+		                                              placementOrient);
+		const placeNonTargets = make_hex_lattice_rhombus(4, 4, 2, x_scale(1),
+		                                                 y_scale(state.ui.extent.results_training.max) - 5,
+		                                                 "BOTTOM_RIGHT",
+		                                                 "SKEW_RIGHT");
+		samples.byTarget['target'].forEach((s, i) => {
+			const row = i % 5;
+			const col = i / 5;
+			const result_p = placeTargets(row, col);
+			s.path = treePathsPixels[s.pathID].concat(result_p);
+		});
+		samples.byTarget['nontarget'].forEach((s, i) => {
+			const row = i % 5;
+			const col = i / 5;
+			const result_p = placeNonTargets(row, col);
+			s.path = treePathsPixels[s.pathID].concat(result_p);
+		});
 
 		return (
 			<svg width={width} height={height}>
@@ -120,11 +143,10 @@ class DecisionTree extends React.Component {
 				<TreePathList paths={treePathsPixels} />
 			  </g>
 			  <g className="tree-results">
-				<ClassifierResults width={width} x="0" y={y_scale(state.ui.extent.results_test.max)} sideA={sideA} sideB={sideB} samples={samples} />
-				<ClassifierResults width={width} x="0" y={y_scale(state.ui.extent.results_training.max)} sideA={sideA} sideB={sideB} samples={samples} />
+				<ClassifierResults width={width} x="0" y={y_scale(state.ui.extent.results_training.max)} sideA={sideA} sideB={sideB} samples={samples.samples} />
 			  </g>
 			  <g> className="sample-sets">
-				<SampleSet samples={samples} progresses={treeProgress} name="training" />
+				<SampleSet samples={samples.samples} progresses={treeProgress} name="training" />
 			  </g>
 			</svg>
 		);

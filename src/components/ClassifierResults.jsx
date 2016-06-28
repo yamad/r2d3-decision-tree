@@ -45,7 +45,7 @@ const ClassifierSamples = ({ width, side}) => {
 	});
 
 	return <g transform={"translate("+transformX+",-5)"}>
-		{a.map(n => <circle cx={n.x} cy={n.y} fill="red" r="2" key={n.id} />)}
+		{a.map(n => <circle cx={n.x} cy={n.y} fill="gray" r="2" key={n.id} />)}
 	</g>;
 };
 
@@ -59,13 +59,8 @@ const ClassifierResults = ({ width, x, y, sideA, sideB }) => {
     return (
 	    <g className="classifier-results" transform={"translate("+x+","+y+")"}>
 	      <ClassifierAccuracy width={width} accuracy={accuracy} />
-
 	      <ClassifierFraction x={left_anchor}  {...sideA} />
-	      <ClassifierSamples side="LEFT"  width={width} />
-
 	      <ClassifierFraction x={right_anchor} {...sideB} />
-	      <ClassifierSamples side="RIGHT" width={width} />
-
 	      <rect className="classifier-base" />
             </g>);
 };
