@@ -23,17 +23,15 @@ class DecisionTree extends React.Component {
 		const selector = makeSelector();
 
 		const x_scale = selector.x_scaler(state),
-		      y_scale = selector.y_scaler(state);
+		      y_scale = selector.y_scaler(state),
+		      tree_scale = selector.y_tree_scaler(state);
 		const { width, height } = selector.canvasSize(state);
 
 		// add calculated point to each node
-		const tree_nodes  = tree.nodes;
-		const tree_paths  = tree.paths;
-
 		const nodeToPoint = (node) => {
 			const p = tree.points[node.id];
 			return { x : x_scale(p.x),
-			         y : y_scale(p.y) };
+			         y : tree_scale(p.y) };
 		};
 		const nodesToPoints = (nids) => nids.map(nid => nodeToPoint(tree_nodes[nid]));
 		const treePathsPoints = _.mapValues(tree_paths, nodesToPoints);
@@ -43,7 +41,7 @@ class DecisionTree extends React.Component {
 
 		const TreeLeaf = ({ leaf }) => {
 			let x = x_scale(tree.points[leaf.id].x);
-			let y = y_scale(tree.points[leaf.id].y) - 14;
+			let y = tree_scale(tree.points[leaf.id].y) - 14;
 
 			if (leaf.type === 'LEFT')  x += state.ui.tree_offset-1;
 			if (leaf.type === 'RIGHT') x -= state.ui.tree_offset+1;
@@ -54,7 +52,7 @@ class DecisionTree extends React.Component {
 			        width="2" height="14" /> );
 		};
 		const TreeLink = ({ src, dst }) => {
-			var d1 = link_angled_path(src, dst, x_scale, y_scale, state.ui.tree_offset);
+			var d1 = link_angled_path(src, dst, x_scale, tree_scale, state.ui.tree_offset);
 			return (
 				<g>
 				  <path d={d1} stroke-width="1" stroke="gray" fill="none"/>
