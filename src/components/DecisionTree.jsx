@@ -19,6 +19,7 @@ class DecisionTree extends React.Component {
 
 	render() {
 		const tree = this.props.tree;
+		const samples = this.props.samples;
 		const state = makeState();
 		const selector = makeSelector();
 
@@ -93,8 +94,7 @@ class DecisionTree extends React.Component {
 
 
 		// test
-		const sampleProgress = progressArray(this.state.progress, 5, 0.3);
-		const samples  = _.map(sampleProgress, (p) => { return { progress : p } });
+		const treeProgress = progressArray(this.state.progress, samples.length, 0.2);
 
 		return (
 			<svg width={width} height={height}>
@@ -103,7 +103,9 @@ class DecisionTree extends React.Component {
 				<TreeLeafList leaves={_.values(tree.leaves)} />
 				<TreePathList paths={treePathsPoints} />
 				<SampleSet samples={samples} name="test" />
-				<ClassifierResults width={width} x="10" y="600" sideA={sideA} sideB={sideB} />
+				<ClassifierResults width={width} x="0" y={y_scale(state.ui.extent.results_test.max)} sideA={sideA} sideB={sideB} samples={samples} />
+				<ClassifierResults width={width} x="0" y={y_scale(state.ui.extent.results_training.max)} sideA={sideA} sideB={sideB} samples={samples} />
+				<SampleSet samples={samples} progresses={treeProgress} name="training" />
 			  </g>
 			</svg>
 		);

@@ -102,8 +102,10 @@ export function classifyAppliedSampleSet(nodes, ap_samples) {
 export function classifySampleSet(nodes, samples) {
 	const ap_samples = applySampleSet(nodes, getRoot(nodes), samples);
 	const classified = classifyAppliedSampleSet(nodes, ap_samples);
-	return [ap_samples, classified];
+	return { byPath:   ap_samples,
+	         byTarget: classified };
 }
+
 
 /** return list of node ids giving path from root to given node */
 export function treeLineage(nodes, node) {

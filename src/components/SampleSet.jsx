@@ -1,4 +1,5 @@
 import React from 'react';
+import _ from 'lodash';
 
 import Sample from './Sample.jsx';
 
@@ -6,10 +7,10 @@ import Sample from './Sample.jsx';
  *
  * Used for holding training/cross-validation/test sets
  */
-const SampleSet = ({ name, samples}) => (
+const SampleSet = ({ name, samples, progresses}) => (
 	<g className={"samples "+name}>
 	  {samples.map((s, i) =>
-		       <Sample key={"sample-"+i} progress={s.progress} {...s} />)}
+		       <Sample key={"sample-"+i} progress={progresses[i]} {...s} />)}
 	</g>
 );
 
