@@ -99,16 +99,6 @@ class DecisionTree extends React.Component {
 			      <g className="leaves">
 			      {leaves.map(l => <TreeLeaf key={"leaf-"+l.id} leaf={l} />)}
 		</g>;
-
-		const sideA = { 'correct': 10,
-		                'total'  : 20,
-		                'samples' : [] };
-
-		const sideB = { 'correct': 192,
-		                'total'  : 200,
-		                'samples' : [] };
-
-
 		// sample preparation
 		const treeProgress = progressArray(this.state.progress, samples.samples.length, 0.2);
 
@@ -143,7 +133,7 @@ class DecisionTree extends React.Component {
 				<TreePathList paths={treePathsPixels} />
 			  </g>
 			  <g className="tree-results">
-				<ClassifierResults width={width} x="0" y={y_scale(state.ui.extent.results_training.max)} sideA={sideA} sideB={sideB} samples={samples.samples} />
+				<ClassifierResults width={width} x="0" y={y_scale(state.ui.extent.results_training.max)} samples={samples.samples} progress={treeProgress} />
 			  </g>
 			  <g> className="sample-sets">
 				<SampleSet samples={samples.samples} progresses={treeProgress} name="training" />

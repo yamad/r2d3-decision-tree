@@ -51,18 +51,35 @@ const ClassifierSamples = ({ width, side}) => {
 
 
 
-const ClassifierResults = ({ width, x, y, sideA, sideB }) => {
-    const accuracy = Math.round((sideA.correct + sideB.correct) / (sideA.total + sideB.total) * 1000) / 10;
-    const left_anchor  = width * 0.37;
-    const right_anchor = width * 0.63;
+const ClassifierResults = ({ width, x, y, samples, progress }) => {
+	let target_total = 0;
+	let target_correct = 0;
+	let nontarget_total = 0;
+	let nontarget_correct = 0;
+	samples.forEach((s, i) => {
+		if (progress[i] < 1) return; // only process finished samples
+		if (s.isTarget) {
+			target_total++;
+			if (s.target == 0) target_correct++;
+		} else {
+			nontarget_total++;
+			if (s.target == 1) nontarget_correct++;
+		}
+	});
 
-    return (
-	    <g className="classifier-results" transform={"translate("+x+","+y+")"}>
-	      <ClassifierAccuracy width={width} accuracy={accuracy} />
-	      <ClassifierFraction x={left_anchor}  {...sideA} />
-	      <ClassifierFraction x={right_anchor} {...sideB} />
-	      <rect className="classifier-base" />
-            </g>);
+	const correct = target_correct + nontarget_correct;
+	const total = target_total + nontarget_total;
+	const accuracy = total > 0 ? Math.round((correct/total) * 1000) / 10 : 100;
+	const left_anchor  = width * 0.37;
+	const right_anchor = width * 0.63;
+
+	return (
+		<g className="classifier-results" transform={"translate("+x+","+y+")"}>
+		  <ClassifierAccuracy width={width} accuracy={accuracy} />
+		  <ClassifierFraction x={left_anchor} correct={target_correct} total={target_total} />
+		  <ClassifierFraction x={right_anchor} correct={nontarget_correct} total={nontarget_total} />
+		  <rect className="classifier-base" />
+		</g>);
 };
 
 
