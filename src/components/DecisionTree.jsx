@@ -1,12 +1,35 @@
 import React from 'react';
 import _ from 'lodash';
 
-import { link_angled_path, progressArray } from '../util.js';
+import { link_angled_path, progressArray, mapBy, interleave, angled_path_midpoint } from '../util.js';
 import { makeState, makeSelector } from '../state.js';
 
 import SampleSet from './SampleSet.jsx';
 import TreePath from './TreePath.jsx';
 import ClassifierResults from './ClassifierResults.jsx';
+
+function treePathPixels(path, isTarget, xscale, yscale, state) {
+	const tree_src = { 'x': path[0].x,
+	                   'y': path[0].y - 10 };
+	const tree_dst = { 'x': _.last(path).x,
+	                   'y': yscale(state.ui.points.end_path.y) };
+
+	let result_point;
+	if (isTarget) result_point = state.ui.points.end_target;
+	else          result_point = state.ui.points.end_nontarget;
+
+	const result_src = { x: xscale(result_point.x),
+	                     y: yscale(result_point.y) };
+
+	// add midpoints
+	const midpts = mapBy(2, 1, path, (a, b) => angled_path_midpoint(a, b));
+	const tree_path = interleave(path, midpts);
+
+	// construct entire path
+	const full_path = [tree_src].concat(tree_path)
+		      .concat([tree_dst, result_src]);
+	return full_path;
+}
 
 /* A DecisionTree draws a binary classification decision tree */
 class DecisionTree extends React.Component {
@@ -34,11 +57,10 @@ class DecisionTree extends React.Component {
 			return { x : x_scale(p.x),
 			         y : tree_scale(p.y) };
 		};
-		const nodesToPoints = (nids) => nids.map(nid => nodeToPoint(tree_nodes[nid]));
-		const treePathsPoints = _.mapValues(tree_paths, nodesToPoints);
-
-
-		const TreeNode = ({ node }) => <circle cx={x_scale(node.x)} cy={y_scale(node.y)} r={state.ui.sample_radius} />;
+		const nodesToPoints = (nids) => nids.map(nid => nodeToPoint(tree.nodes[nid]));
+		const treePathsPoints = _.mapValues(tree.paths, nodesToPoints);
+		const treePathsPixels = _.mapValues(treePathsPoints,
+		                              (path, id) => treePathPixels(path, tree.nodes[id].target, x_scale, y_scale, state));
 
 		const TreeLeaf = ({ leaf }) => {
 			let x = x_scale(tree.points[leaf.id].x);
@@ -49,23 +71,22 @@ class DecisionTree extends React.Component {
 			const tclass = leaf.target ? "target" : "nontarget";
 
 			return (<rect x={x} y={y}
-			        className={"leaf "+ tclass}
-			        width="2" height="14" /> );
+			        className={"leaf "+ tclass} /> );
 		};
+
 		const TreeLink = ({ src, dst }) => {
 			var d1 = link_angled_path(src, dst, x_scale, tree_scale, state.ui.tree_offset);
 			return (
 				<g>
-				  <path d={d1} stroke-width="1" stroke="gray" fill="none"/>
+				  <path d={d1} className="tree-link" />
 				</g>
 			);
 		};
 
-		const TreePathList = ({ paths }) => {
-			return <g className="paths">
-				{_.map(paths, (p, id) => <TreePath key={"path-"+id} id={id} path={p} isTarget={tree_nodes[id].target} xscale={x_scale} yscale={y_scale} /> )}
+		const TreePathList = ({ paths }) =>
+			<g className="paths">
+				{_.map(paths, (p, id) => <TreePath key={"path-"+id} id={id} path={p} /> )}
 			</g>;
-		}
 
 		const TreeLinkList = ({ links }) =>
 			      <g className="links">
@@ -101,10 +122,13 @@ class DecisionTree extends React.Component {
 			  <g className="decision-tree">
 				<TreeLinkList links={_.values(tree.links)} />
 				<TreeLeafList leaves={_.values(tree.leaves)} />
-				<TreePathList paths={treePathsPoints} />
-				<SampleSet samples={samples} name="test" />
+				<TreePathList paths={treePathsPixels} />
+			  </g>
+			  <g className="tree-results">
 				<ClassifierResults width={width} x="0" y={y_scale(state.ui.extent.results_test.max)} sideA={sideA} sideB={sideB} samples={samples} />
 				<ClassifierResults width={width} x="0" y={y_scale(state.ui.extent.results_training.max)} sideA={sideA} sideB={sideB} samples={samples} />
+			  </g>
+			  <g> className="sample-sets">
 				<SampleSet samples={samples} progresses={treeProgress} name="training" />
 			  </g>
 			</svg>
