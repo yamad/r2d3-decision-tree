@@ -22,13 +22,13 @@ const initialState = {
 			end_nontarget: { x: 0.75, y: 0.75 }
 		},
 		extent: {
-			tree: { min: 0.02, max: 0.6 },
+			tree: { min: 0.06, max: 0.6 },
 			results_training: { min: 0.75, max: 1.00 },
 			results_test:     { min: 0.75, max: 0.9  }
 		},
 		canvas: {
 		 	size:   { width: 600,
-			          height: 500 },
+			          height: 600 },
 			margin: { top: 10,
 			          bottom: 10,
 			          left: 10,
