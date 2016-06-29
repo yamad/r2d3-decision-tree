@@ -9,47 +9,12 @@ const ClassifierAccuracy = ({ width, accuracy }) =>
 	      <text x={width * 0.5} y="-8"  className="accuracy-value">{accuracy}%</text>
 	 </g>;
 
-const ClassifierFraction = ({ x, correct, total }) =>
-    <g className="classifier-fraction">
-        <text x={x-3} y="-8" fill="blue" textAnchor="end"  >{correct}</text>
-        <text x={x}   y="-8" textAnchor="middle">/</text>
-        <text x={x+3} y="-8" fill="blue" textAnchor="start">{total}</text>
+const ClassifierFraction = ({ x, correct, total, targetclass }) =>
+	      <g className={"classifier-fraction "+targetclass}>
+	      <text x={x-3} y="-8" textAnchor="end">{correct}</text>
+	      <text x={x}   y="-8" fill="black" textAnchor="middle">/</text>
+	      <text x={x+3} y="-8" textAnchor="start">{total}</text>
 	      </g>;
-
-const ClassifierSamples = ({ width, side}) => {
-	let placementOrigin;
-	let placementOrient;
-	let transformX;
-
-	switch (side) {
-	case "LEFT":
-		placementOrigin = "BOTTOM_LEFT";
-		placementOrient = "SKEW_LEFT";
-		transformX = 10;
-		break;
-	case "RIGHT":
-	default:
-		placementOrigin = "BOTTOM_RIGHT";
-		placementOrient = "SKEW_RIGHT";
-		transformX = width - 10 - 10;
-		break;
-	}
-
-	const samplePlacement = make_hex_lattice_rhombus(4, 4, 2, 0, 0,
-	                                                 placementOrigin,
-	                                                 placementOrient);
-	const a = _.map(Array(125), (n, i) => {
-		const row = i % 5;
-		const col = i / 5;
-		return Object.assign({ id: i }, samplePlacement(row, col));
-	});
-
-	return <g transform={"translate("+transformX+",-5)"}>
-		{a.map(n => <circle cx={n.x} cy={n.y} fill="gray" r="2" key={n.id} />)}
-	</g>;
-};
-
-
 
 const ClassifierResults = ({ width, x, y, samples, progress }) => {
 	let target_total = 0;
@@ -76,8 +41,8 @@ const ClassifierResults = ({ width, x, y, samples, progress }) => {
 	return (
 		<g className="classifier-results" transform={"translate("+x+","+y+")"}>
 		  <ClassifierAccuracy width={width} accuracy={accuracy} />
-		  <ClassifierFraction x={left_anchor} correct={target_correct} total={target_total} />
-		  <ClassifierFraction x={right_anchor} correct={nontarget_correct} total={nontarget_total} />
+		  <ClassifierFraction x={left_anchor} correct={target_correct} total={target_total} targetclass="target" />
+		  <ClassifierFraction x={right_anchor} correct={nontarget_correct} total={nontarget_total} targetclass="nontarget" />
 		  <rect className="classifier-base" />
 		</g>);
 };

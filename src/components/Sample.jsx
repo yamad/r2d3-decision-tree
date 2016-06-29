@@ -10,14 +10,14 @@ class Sample extends React.Component {
 		               path: pointsToSVGLinePath(this.props.path),
 		               progress: this.props.progress,
 		               pathID: this.props.pathID,
-		               isTarget: this.props.isTarget
+		               targetclass: this.props.isTarget ? "target" : "nontarget"
 		             };
 	}
 
 	render() {
 		return <g>
 			<path d={this.state.path} className="sample-path" ref="path" />;
-			<circle cx={this.state.p.x} cy={this.state.p.y} ref="circle" r="2" fill={this.state.isTarget ? "red" : "green" } />
+			<circle cx={this.state.p.x} cy={this.state.p.y} ref="circle" r="2" className={"sample "+this.state.targetclass} />
 			</g>;
 	}
 
@@ -45,10 +45,5 @@ class Sample extends React.Component {
 			.attr('cy', p.y);
 	}
 }
-
-Sample.propTypes = {
-	progress: React.PropTypes.number.isRequired
-//	pathID: React.PropTypes.number
-};
 
 export default Sample;
