@@ -8,6 +8,8 @@ import SampleSet from './SampleSet.jsx';
 import TreePath from './TreePath.jsx';
 import ClassifierResults from './ClassifierResults.jsx';
 
+const FPS = 20;
+
 function treePathPixels(path, isTarget, xscale, yscale, state) {
 	const tree_src = { 'x': path[0].x,
 	                   'y': path[0].y - 10 };
@@ -100,7 +102,7 @@ class DecisionTree extends React.Component {
 			      {leaves.map(l => <TreeLeaf key={"leaf-"+l.id} leaf={l} />)}
 		</g>;
 		// sample preparation
-		const treeProgress = progressArray(this.state.progress, samples.samples.length, 0.2);
+		let treeProgress = progressArray(this.state.progress, samples.samples.length, 0.2);
 
 		const placementOrigin = "BOTTOM_LEFT";
 		const placementOrient = "SKEW_LEFT";
@@ -143,9 +145,11 @@ class DecisionTree extends React.Component {
 	}
 
 	tick() {
+		let fps = 1000 / (FPS || 60);
+
 		this.setState({
-			progress: this.state.progress + 0.01,
-			interval: this.state.progress < 1 ? requestAnimationFrame(this.tick) : null
+			progress: this.state.progress + 0.004,
+			interval: this.state.progress < 1 ? setTimeout(_ => requestAnimationFrame(this.tick), fps) : null
 		});
 	}
 

@@ -18,11 +18,11 @@ const initialState = {
 		points: {
 			start:         { x:    0, y:   0  },
 			end_path:      { x: null, y: 0.7  },
-			end_target:    { x: 0.25, y: 0.75 },
-			end_nontarget: { x: 0.75, y: 0.75 }
+			end_target:    { x: 0.25, y: 0.8 },
+			end_nontarget: { x: 0.75, y: 0.8 }
 		},
 		extent: {
-			tree: { min: 0.06, max: 0.6 },
+			tree: { min: 0.06, max: 0.7 },
 			results_training: { min: 0.75, max: 1.00 },
 			results_test:     { min: 0.75, max: 0.9  }
 		},
