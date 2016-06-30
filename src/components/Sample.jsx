@@ -17,7 +17,8 @@ class Sample extends React.Component {
 	render() {
 		return <g>
 			<path d={this.state.path} className="sample-path" ref="path" />;
-			<circle cx={this.state.p.x} cy={this.state.p.y} ref="circle" r="2" className={"sample "+this.state.targetclass} />
+			<circle cx={this.state.p.x} cy={this.state.p.y} ref="circle" r="2"
+		                className={"sample "+this.state.targetclass} />
 			</g>;
 	}
 
@@ -37,12 +38,7 @@ class Sample extends React.Component {
 		path = this.refs.path;
 		let dist = this.state.progress * path.getTotalLength();
 		const p = path.getPointAtLength(dist);
-		// this.refs.circle.setAttribute('cx', p.x);
-		// this.refs.circle.setAttribute('cy', p.y);
-
-		d3.select(this.refs.circle)
-			.attr('cx', p.x)
-			.attr('cy', p.y);
+		this.setState({ p: p });
 	}
 }
 
