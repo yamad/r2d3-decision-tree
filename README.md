@@ -1,6 +1,6 @@
 # Clone of [R2D3](http://www.r2d3.us) decision tree
 
-[See Demo](https://yamad.github.io/r2d3-decision-tree/)
+[See Demo](https://yamad.github.io/r2d3-decision-tree/) (press spacebar to start/stop, enter to reset)
 
 There is a beautiful animation of data flowing through a decision tree at [R2D3: A Visual Guide to Machine Learning](http://www.r2d3.us). This is a clone to learn about how that animation was made.
 
