@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Decision Tree</title>
+    <style>
+      body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 18pt;
+      }
+
+      rect.leaf {
+          width: 2px;
+          height: 14px;
+      }
+
+      path {
+          fill: none;
+      }
+
+      path.tree-path {
+          stroke: none;
+      }
+
+      path.tree-link {
+          stroke: gray;
+          stroke-width: 1;
+      }
+
+      path.sample-path {
+          stroke: none;
+      }
+
+      rect.classifier-base {
+          height: 1px;
+          fill: #aaaaaa;
+          width: 100%;
+      }
+
+      text.accuracy-label {
+          font-size: 9px;
+          text-anchor: middle;
+      }
+
+      text.accuracy-value {
+          font-size: 18px;
+          text-anchor: middle;
+      }
+
+      .classifier-fraction {
+          font-size:16px;
+      }
+
+      .target {
+          color: rgb(16, 70, 131);
+          fill: rgb(16, 70, 131);
+      }
+
+      .nontarget {
+          color: rgb(65, 153, 43);
+          fill: rgb(65, 153, 43);
+      }
+
+    </style>
+  <link rel="stylesheet" href="/styles.css"></head>
+  <body>
+    <div id="main"></div>
+    <script src="/bundle.js"></script>
+  </body>
+</html>
