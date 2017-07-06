@@ -25,6 +25,7 @@ export const flattenObjectHierarchy = (root) => {
 	return [new_root, ...root.children.map(flattenObjectHierarchy)];
 };
 
+
 /**
  * return SVG linear path from a list of {x, y} points
  *
@@ -56,6 +57,7 @@ export const chunkBy = (n, k, array) => {
 		n = 0;
 	return [array.slice(0, n), ...chunkBy(n, k, array.slice(k))];
 };
+
 
 /**
  * map over array with function `f` of `n` args, skipping `k`
@@ -106,6 +108,7 @@ export function treePathPixels(path, isTarget, xscale, yscale, state) {
 	// return entire path
 	return [tree_src, ...tree_path, tree_dst, result_src];
 }
+
 
 /** Generates svg path from source to destination,
  *  using two line segments, a diagonal line then vertical line.
@@ -238,10 +241,17 @@ export function make_hex_lattice_rhombus(unit_width, unit_height, spacing,
 	};
 }
 
+
 /** return list of `n` progress markers for master progress value `progress` */
 // TODO: there is probably a shortcut more efficient way to map
 // between parent progress and child progress
 export function progressArray(progress, n, nspan) {
+	function normalize(x, lo, hi) {
+		var normed = (x - lo) / (hi - lo);
+		// clamp between 0 and 1
+		return Math.max(0, Math.min(1, normed));
+	}
+
 	nspan = nspan || undefined;
 	if (n < 1) return [];
 	return Array(n).fill(undefined).map((_, i) => {
@@ -249,6 +259,7 @@ export function progressArray(progress, n, nspan) {
 		return normalize(progress, lo, hi);
 	});
 }
+
 
 /**
  * create domain for function mapping a portion of a parent progress
@@ -274,11 +285,4 @@ export function progressDomain(k, n, distance) {
 
 	const s = k * (interval / (n-1));
 	return [ s, s + distance ];
-}
-
-
-function normalize(x, lo, hi) {
-	var normed = (x - lo) / (hi - lo);
-	// clamp between 0 and 1
-	return Math.max(0, Math.min(1, normed));
 }
