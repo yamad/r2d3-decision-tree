@@ -1,6 +1,3 @@
-import _ from 'lodash';
-
-
 // assertion utility code from Eloquent Javascript
 export function AssertionFailed(message) {
   this.message = message;
@@ -20,12 +17,11 @@ export const flattenObjectHierarchy = (root) => {
 	// replace direct references with ids
 	const new_root =
 		      Object.assign({}, root,
-		                    { children: _.map(root.children, (o) => o.id),
-		                      keey: root.key,
+		                    { children: root.children.map(o => o.id),
+		                      key: root.key,
 		                      val: root.value
 		                    });
-	return [new_root].concat(
-		_.flatMap(root.children, flattenObjectHierarchy));
+	return [new_root, ...root.children.map(flattenObjectHierarchy)];
 };
 
 // return SVG linear path from a list of {x, y} points
@@ -37,7 +33,7 @@ export const pointsToSVGLinePath = (points) => {
 
 	// 'M' followed by >1 points have implicit 'L' commands between points
 	const pathSegment = (p) => ' ' + p.x + ' ' + p.y;
-	return _.reduce(_.map(points, pathSegment), (a,b) => (a + b), 'M');
+	return ["M", ...points.map(pathSegment)].join("");
 };
 
 
@@ -51,7 +47,9 @@ export const chunkBy = (n, k, array) => {
 	if (k <= 0)             return [];
 	if (array.length === 0) return array;
 	if (array.length < n)   return [array];
-	return [_.take(array, n)].concat(chunkBy(n, k, _.drop(array, k)));
+	if (n < 1)
+		n = 0;
+	return [array.slice(0, n), ...chunkBy(n, k, array.slice(k))];
 };
 
 /** map over array with function `f` of `n` args, skipping `k`
@@ -65,17 +63,19 @@ export const chunkBy = (n, k, array) => {
  *   mapBy(2, 1, [1,2,3,4], (a, b) => a + b)  --> [3,5,7]
  */
 export const mapBy = (n, k, array, f) => {
-	if (array.length < n) return [];
-	const chunks = chunkBy(n, k, array);
-	return _.map(_.filter(chunks, (c) => c.length === n),
-	             (c) => f.apply(null, c));
+	if (array.length < n)
+		return [];
+	const chunks = chunkBy(n, k, array).filter(c => c.length === n);
+	return chunks.map(c => f(...c));
 };
 
 /** interleave elements of two arrays */
 export const interleave = (a, b) => {
-	if (a.length === 0) return b;
-	if (b.length === 0) return a;
-	return [_.head(a), _.head(b)].concat(interleave(_.tail(a), _.tail(b)));
+	if (a.length === 0)
+		return b;
+	if (b.length === 0)
+		return a;
+	return [a[0], b[0]].concat(interleave(a.slice(1), b.slice(1)));
 };
 
 
@@ -249,5 +249,7 @@ export function progressDomain(k, n, distance) {
 
 
 function normalize(x, lo, hi) {
-	return _.clamp((x - lo) / (hi - lo), 0, 1);
+	var normed = (x - lo) / (hi - lo);
+	// clamp between 0 and 1
+	return Math.max(0, Math.min(1, normed));
 }
