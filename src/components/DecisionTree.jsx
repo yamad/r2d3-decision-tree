@@ -48,9 +48,9 @@ class DecisionTree extends React.Component {
 		const state = makeState();
 		const selector = makeSelector();
 
-		const x_scale = selector.x_scaler(state),
-		      y_scale = selector.y_scaler(state),
-		      tree_scale = selector.y_tree_scaler(state);
+		const x_scale = selector.xScale(state),
+		      y_scale = selector.yScale(state),
+		      tree_scale = selector.yTreeScale(state);
 		const { width, height } = selector.canvasSize(state);
 
 		// add calculated point to each node
