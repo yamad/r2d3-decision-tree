@@ -7,7 +7,7 @@ import d3 from 'd3';
 import { clean_r2d3_tree_data } from './tree_clean.js';
 
 // methods for cleaned trees
-export const isRoot    = (node) => _.isNull(node.parent);
+export const isRoot    = (node) => node.parent === undefined;
 export const isLeaf    = (node) => node.leaf;
 export const getRoot   = (nodes) => _.head(_.values(_.pickBy(nodes, isRoot)));
 export const getLeaves = (nodes) => _.pickBy(nodes, isLeaf);
@@ -73,7 +73,7 @@ export const makeDecisionTree = (raw_tree) => {
  * returns sample lists keyed by leaf node ids
  */
 export function applySampleSet(nodes, root, samples) {
-	if (root == null)
+	if (root === undefined)
 		return {};
 	if (isLeaf(root)) {
 		let res = {};
@@ -109,7 +109,8 @@ export function classifySampleSet(nodes, samples) {
 
 /** return list of node ids giving path from root to given node */
 export function treeLineage(nodes, node) {
-	if (node.parent == null) return [node.id];
+	if (node.parent == undefined)
+		return [node.id];
 	return treeLineage(nodes, nodes[node.parent]).concat(node.id);
 }
 

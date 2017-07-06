@@ -2,42 +2,42 @@
 import _ from 'lodash';
 
 const make_r2d3_fork_node = () => ({
-	id:       null,			// unique node id
-	samples:  0,			// sample count
-	key:     "",			// factor name
-	value:    0,			// factor split point
-	gini:	  0,			// gini index for calculating split
-	children: []			// descendant tree nodes, direct refs
+	id:       undefined,	  // unique node id
+	samples:  0,              // sample count
+	key:     "",              // factor name
+	value:    0,              // factor split point
+	gini:	  0,              // gini index for calculating split
+	children: []              // descendant tree nodes, direct refs
 });
 
 const make_r2d3_leaf_node = () => ({
-	id:        null,		// unique node id
-	samples:   1,			// sample count
-	value:     [0, 0],		// sample counts per class
-	impurity:  0,			// *not used
-	criterion: "gini"		// *not used
+	id:        undefined,	  // unique node id
+	samples:   1,             // sample count
+	value:     [0, 0],        // sample counts per class
+	impurity:  0,             // *not used
+	criterion: "gini"         // *not used
 });
 
 const makeForkNode = () => ({
-	id:          null,		// unique node id
-	type:        "",		// type, ROOT/LEFT/RIGHT
-	leaf:        false,		// true if a leaf node
-	samples:     0,			// sample count
-	split_key:   "",		// split factor name
-	split_point: 0,			// split factor value
-	parent:      null,      // parent node id
-	children:    []			// descendant tree nodes, ids
+	id:          undefined,	  // unique node id
+	type:        "",          // type, ROOT/LEFT/RIGHT
+	leaf:        false,       // true if a leaf node
+	samples:     0,           // sample count
+	split_key:   "",          // split factor name
+	split_point: 0,           // split factor value
+	parent:      undefined,   // parent node id
+	children:    []           // descendant tree nodes, ids
 });
 
 const makeLeafNode = () => ({
-	id:            null,	 // unique node id
-	type:          "",		 // type, ROOT/LEFT/RIGHT
-	leaf:          true,	 // true if a leaf node
-	samples:       0,		 // sample count
-	sample_counts: [0, 0],	 // number of classified target/non-target samples
-	target:		   false,	 // clasifies target or non-target samples?
-	parent:        null,     // parent node id
-	children:      null		 // descendant tree nodes, ids
+	id:            undefined, // unique node id
+	type:          "",        // type, ROOT/LEFT/RIGHT
+	leaf:          true,      // true if a leaf node
+	samples:       0,         // sample count
+	sample_counts: [0, 0],    // # classified target/non-target samples
+	target:		   false,     // clasifies target or non-target samples?
+	parent:        undefined, // parent node id
+	children:      undefined  // descendant tree nodes, ids
 });
 
 // assign values from source object to destination object, for all
@@ -59,25 +59,25 @@ const deriveObject = (dst, src) => {
 // `tree-training-set-98.js` file. all functions operate on
 // denormalized data.
 export function clean_r2d3_tree_data(raw) {
-	const isLeaf = (n) => _.isUndefined(n.children);
-	const isRoot = (n) => _.isUndefined(n.parent);
+	const isLeaf = (n) => n.children == undefined;
+	const isRoot = (n) => n.parent == undefined;
 
 	// flatten embedded child nodes into a list
 	const flattenTree = (root) => {
 		if (isLeaf(root)) return [root];
 
 		// more to do. recurse through children
-		const assignParent = (n) => _.assign({ parent : root}, n);
-		root.children = _.map(root.children, assignParent);
-		return [root].concat(_.flatMap(root.children, flattenTree));
+		const assignParent = (n) => Object.assign({ parent : root}, n);
+		root.children = root.children.map(assignParent);
+		return [root, ..._.flatMap(root.children, flattenTree)];
 	};
 
 	// replace direct references with ids. works on single node
 	const normalizeNode = (node) => {
-		if (!_.isNull(node, 'children') && !_.isEmpty(node, 'children'))
-			node.children = _.map(node.children, c => parseInt(c.id));
-		if (!_.isNull(node.parent))
-			node.parent   = parseInt(node.parent.id);
+		if (node.children)
+			node.children = node.children.map(c => Number(c.id));
+		if (node.parent)
+			node.parent = parseInt(node.parent.id);
 		return node;
 	};
 
@@ -104,7 +104,8 @@ export function clean_r2d3_tree_data(raw) {
 		//
 		// in leaf nodes, `value` is an array giving sample counts for
 		// A/B classification.
-		if (n.value == null) throw new Error("Invalid tree input: no value on node");
+		if (n.value == undefined)
+			throw new Error("Invalid tree input: no value on node");
 		a.sample_counts = n.value;
 		a.target = n.value[0] > n.value[1];
 
