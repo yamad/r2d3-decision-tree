@@ -1,23 +1,6 @@
 /** Clean/prepare/transform raw input tree data */
 import _ from 'lodash';
 
-const make_r2d3_fork_node = () => ({
-	id:       undefined,	  // unique node id
-	samples:  0,              // sample count
-	key:     "",              // factor name
-	value:    0,              // factor split point
-	gini:	  0,              // gini index for calculating split
-	children: []              // descendant tree nodes, direct refs
-});
-
-const make_r2d3_leaf_node = () => ({
-	id:        undefined,	  // unique node id
-	samples:   1,             // sample count
-	value:     [0, 0],        // sample counts per class
-	impurity:  0,             // *not used
-	criterion: "gini"         // *not used
-});
-
 const makeForkNode = () => ({
 	id:          undefined,	  // unique node id
 	type:        "",          // type, ROOT/LEFT/RIGHT

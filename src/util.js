@@ -10,22 +10,6 @@ function assert(test, message) {
 }
 
 
-/** return list of all child objects of root */
-export const flattenObjectHierarchy = (root) => {
-	if (root === undefined)
-		return [];
-
-	// replace direct references with ids
-	const new_root =
-	      Object.assign({}, root,
-	                    { children: root.children.map(o => o.id),
-	                      key: root.key,
-	                      val: root.value
-	                    });
-	return [new_root, ...root.children.map(flattenObjectHierarchy)];
-};
-
-
 /**
  * return SVG linear path from a list of {x, y} points
  *

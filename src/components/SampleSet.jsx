@@ -1,6 +1,5 @@
 import React from 'react';
-import { StaggeredMotion, spring, presets } from 'react-motion';
-import _ from 'lodash';
+import { StaggeredMotion, spring } from 'react-motion';
 
 import Sample from './Sample.jsx';
 
@@ -23,13 +22,5 @@ const SampleSet = ({ name, samples, progresses}) => (
 	  }
 	</StaggeredMotion>
 );
-
-SampleSet.propTypes = {
-    // samples: React.PropTypes.arrayOf(
-    //     PropTypes.shape({
-    //         id: React.PropTypes.number.isRequired,
-    //         ...Sample.propTypes,
-    //     })).isRequired
-};
 
 export default SampleSet;

@@ -5,7 +5,6 @@
  * supports the one-way information flow in React/Redux designs,
  * although Redux is not actually used (yet).
  */
-import _ from 'lodash';
 import { createSelector } from 'reselect';
 import d3 from 'd3';
 

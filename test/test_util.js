@@ -1,6 +1,6 @@
 import test from 'tape';
 import { pointsToSVGLinePath, mapBy, chunkBy, interleave,
-         progressArray, progressDomain, AssertionFailed } from '../src/util.js';
+         progressArray, progressDomain } from '../src/util.js';
 
 function approx(t, a, b, msg) {
 	return t.ok(b - 1e-6 < a && a < b + 1e-6, msg);
