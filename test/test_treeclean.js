@@ -1,7 +1,7 @@
 import test from 'tape';
 
 import _ from 'lodash';
-import { clean_r2d3_tree_data } from '../src/tree_clean.js';
+import { cleanRawR2D3Tree } from '../src/tree_clean.js';
 
 test("cleaning data returns flattened dictionary keyed by id", (t) => {
 	const input = { id: 0,
@@ -9,9 +9,9 @@ test("cleaning data returns flattened dictionary keyed by id", (t) => {
 	                children: [ { id: 1, value: 20 } ] };
 
 	const expected = { 0 : { id: 0, children: [ 1 ] },
-	                   1 : { id: 1, children: []    }};
+	                   1 : { id: 1, children: [ ] }};
 
- 	const actual   = clean_r2d3_tree_data(input);
+	const actual   = cleanRawR2D3Tree(input);
 
 	_.forIn(actual, (v, id) => {
 		t.equal(v['id'], expected[id]['id']);
@@ -31,7 +31,7 @@ test("cleaning data returns proper type for each node", (t) => {
 	                   1: { type: 'LEFT' },
 	                   2: { type: 'RIGHT' } };
 
-	const actual = clean_r2d3_tree_data(input);
+	const actual = cleanRawR2D3Tree(input);
 	_.forIn(actual, (v, id) => {
 		t.equal(expected[id].type, v.type,
 		        "Node types should be equal");
