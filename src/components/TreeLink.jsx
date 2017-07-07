@@ -1,8 +1,8 @@
 import React from 'react';
-import { link_angled_path } from '../util.js';
+import { linkAngledPath } from '../util.js';
 
 export function TreeLink({ src, dst, state, selector }) {
-	var d1 = link_angled_path(src, dst,
+	var d1 = linkAngledPath(src, dst,
 							  selector.xScale(state),
 							  selector.yTreeScale(state),
 							  state.ui.tree_offset);

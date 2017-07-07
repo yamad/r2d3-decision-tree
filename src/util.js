@@ -68,27 +68,27 @@ export const interleave = (a, b) => {
 		return b;
 	if (b.length === 0)
 		return a;
-	return [a[0], b[0]].concat(interleave(a.slice(1), b.slice(1)));
+	return [a[0], b[0], ...interleave(a.slice(1), b.slice(1))];
 };
 
 
 /** returns pixel coordinates for every point in a (normalized) path */
-export function treePathPixels(path, isTarget, xscale, yscale, state) {
-	const tree_src = { 'x': path[0].x,
-	                   'y': path[0].y - 10 };
-	const tree_dst = { 'x': path[path.length-1].x,
-	                   'y': yscale(state.ui.points.end_path.y) };
+export function treePathPixels(path, isTarget, xScale, yScale, state) {
+	const treeSrc = { 'x': path[0].x,
+	                  'y': path[0].y - 10 };
+	const treeDst = { 'x': path[path.length-1].x,
+	                  'y': yScale(state.ui.points.end_path.y) };
 
-	let result_point = state.ui.points[isTarget ? "end_target" : "end_nontarget"],
-	    result_src = { x: xscale(result_point.x),
-	                   y: yscale(result_point.y) };
+	let resultPoint = state.ui.points[isTarget ? "end_target" : "end_nontarget"],
+	    resultSrc = { x: xScale(resultPoint.x),
+	                   y: yScale(resultPoint.y) };
 
 	// add midpoints
-	const midpts = mapBy(2, 1, path, (a, b) => angled_path_midpoint(a, b));
-	const tree_path = interleave(path, midpts);
+	const midpts = mapBy(2, 1, path, (a, b) => angledPathMidpoint(a, b));
+	const treePath = interleave(path, midpts);
 
 	// return entire path
-	return [tree_src, ...tree_path, tree_dst, result_src];
+	return [treeSrc, ...treePath, treeDst, resultSrc];
 }
 
 
@@ -97,10 +97,10 @@ export function treePathPixels(path, isTarget, xscale, yscale, state) {
  *
  * @param src         source point      (needs x, y attributes)
  * @param dst         destination point (needs x, y attributes)
- * @param x_scale     conversion function for x scale, usually from d3.scale
- * @param y_scale     conversion function for y scale, usually from d3.scale
+ * @param xScale      conversion function for x scale, usually from d3.scale
+ * @param yScale      conversion function for y scale, usually from d3.scale
  * @param offset      optional offset (in scaled units), positive is 'smaller'
- * @param split_frac  where to split vertical length for diag/vert parts
+ * @param splitFrac   where to split vertical length for diag/vert parts
  *
  *  e.g.,            (internally)
  *       src              A
@@ -133,11 +133,11 @@ export function treePathPixels(path, isTarget, xscale, yscale, state) {
  * of one leg of a right triangle for which we know an angle and the
  * length of its opposite leg.
  */
-export function link_angled_path(src, dst, x_scale, y_scale, offset=0, split_frac=0.3) {
+export function linkAngledPath(src, dst, xScale, yScale, offset=0, splitFrac=0.3) {
 	// original/unscaled points -- A, B and M
-	let pa = { 'x': x_scale(src.x), 'y': y_scale(src.y) },
-	    pb = { 'x': x_scale(dst.x), 'y': y_scale(dst.y) },
-	    pm = angled_path_midpoint(pa, pb, split_frac);
+	let pa = { 'x': xScale(src.x), 'y': yScale(src.y) },
+	    pb = { 'x': xScale(dst.x), 'y': yScale(dst.y) },
+	    pm = angledPathMidpoint(pa, pb, splitFrac);
 
 	if (offset != 0) {
 		// correct signs
@@ -145,9 +145,9 @@ export function link_angled_path(src, dst, x_scale, y_scale, offset=0, split_fra
 		      yoff = (pa.y - pb.y) > 0 ? -offset : +offset;
 
 		// triangle with hypoteneuse A-M
-		const pm_dx = pm.x - pa.x,
-		      pm_dy = pm.y - pa.y,
-		      theta = Math.atan(pm_dx/pm_dy); // angle wrt center
+		const pmDx = pm.x - pa.x,
+		      pmDy = pm.y - pa.y,
+		      theta = Math.atan(pmDx/pmDy); // angle wrt center
 
 		// calculate offset points
 		pa.y += yoff;
@@ -161,9 +161,9 @@ export function link_angled_path(src, dst, x_scale, y_scale, offset=0, split_fra
 }
 
 // return intermediate point between src and dst
-export function angled_path_midpoint(src, dst, split_frac = 0.3) {
+export function angledPathMidpoint(src, dst, splitFrac = 0.3) {
 	return { 'x': dst.x,
-	         'y': src.y + (dst.y - src.y) * split_frac };
+	         'y': src.y + (dst.y - src.y) * splitFrac };
 }
 
 
@@ -174,52 +174,52 @@ export function angled_path_midpoint(src, dst, split_frac = 0.3) {
  * see http://www.redblobgames.com/grids/hexagons/#coordinates for
  * math
  */
-export function makeHexLatticeRhombus(unit_width, unit_height, spacing,
-                                      base_x, base_y, origin="BOTTOM_LEFT",
+export function makeHexLatticeRhombus(unitWidth, unitHeight, spacing,
+                                      baseX, baseY, origin="BOTTOM_LEFT",
                                       orientation="SKEW_LEFT") {
-	const size_x = (unit_width  + spacing) / 2;
-	const size_y = (unit_height + spacing) / 2;
+	const sizeX = (unitWidth  + spacing) / 2;
+	const sizeY = (unitHeight + spacing) / 2;
 
 	/* function returns pixel location from axial coordinates
 	 * is 'q' axis skewed left or right?
 	 */
-	let hex_to_pixel;
+	let hexToPixel;
 	switch (orientation) {
 	case "SKEW_RIGHT":
-		hex_to_pixel = (r, q) => {
-			return { 'x' : size_x * Math.sqrt(3) * (q + r/2),
-			         'y' : size_y * 3/2 * r }; };
+		hexToPixel = (r, q) => {
+			return { 'x' : sizeX * Math.sqrt(3) * (q + r/2),
+			         'y' : sizeY * 3/2 * r }; };
 		break;
 	case "SKEW_LEFT":
 	default:
-		hex_to_pixel = (r, q) => {
-			return { 'x' : size_x * Math.sqrt(3) * (q + -r/2),
-			         'y' : size_y * 3/2 * r }; };
+		hexToPixel = (r, q) => {
+			return { 'x' : sizeX * Math.sqrt(3) * (q + -r/2),
+			         'y' : sizeY * 3/2 * r }; };
 		break;
 	}
 
 	/* change r and q axes origin */
-	let to_pixel;
+	let toPixel;
 	switch (origin) {
 	case "TOP_RIGHT":
-		to_pixel = (r, q) => hex_to_pixel( r, -q);
+		toPixel = (r, q) => hexToPixel( r, -q);
 		break;
 	case "BOTTOM_LEFT":
-		to_pixel = (r, q) => hex_to_pixel(-r,  q);
+		toPixel = (r, q) => hexToPixel(-r,  q);
 		break;
 	case "BOTTOM_RIGHT":
-		to_pixel = (r, q) => hex_to_pixel(-r, -q);
+		toPixel = (r, q) => hexToPixel(-r, -q);
 		break;
 	case "TOP_LEFT":
 	default:
-		to_pixel = (r, q) => hex_to_pixel( r,  q);
+		toPixel = (r, q) => hexToPixel( r,  q);
 		break;
 	}
 
 	return (row, col) => {
-		const p = to_pixel(row, col);
-		return { 'x' : base_x + p.x,
-		         'y' : base_y + p.y };
+		const p = toPixel(row, col);
+		return { 'x' : baseX + p.x,
+		         'y' : baseY + p.y };
 	};
 }
 

@@ -13,34 +13,10 @@ export const getLeaves = (nodes) => _.pickBy(nodes, isLeaf);
 export const getPaths  = (nodes) => _.mapValues(getLeaves(nodes),
                                                 node => treeLineage(nodes, node));
 
-/** return link object between source and destination */
-function makeLink(srcId, dstId) {
-	return { source : srcId, target : dstId };
-}
-
-
-/** return map from node id to relative point locations */
-function getPoints(nodes) {
-	// clone nodes because d3 mutates them
-	let treeNodes = _.cloneDeep(nodes);
-
-	let layout = d3.layout.tree()
-	    .separation(() => 1)
-	    .children(d => d.children ? d.children.map(id => treeNodes[id]) : []);
-
-	// d3 add x, y properties to each node object
-	treeNodes = layout.nodes(getRoot(treeNodes));
-	let points = treeNodes.map(n => ( { id: n.id,
-	                                    x: n.x,
-	                                    y: n.y }));
-	// node position points keyed by node id
-	return _.keyBy(points, 'id');
-}
-
 
 /** constructor for decision trees */
-export function makeDecisionTree(raw_tree) {
-	let _nodes = cleanRawR2D3Tree(raw_tree);
+export function makeDecisionTree(rawTree) {
+	let _nodes = cleanRawR2D3Tree(rawTree);
 	let nodes = deepFreeze(_.cloneDeep(_nodes));
 
 	let root   = getRoot(nodes);     // root node
@@ -74,6 +50,31 @@ export function makeDecisionTree(raw_tree) {
 	let api = { nodes, root, leaves, links, points, paths,
 	            applySamples, classifySamples };
 	return api;
+}
+
+
+/** return link object between source and destination */
+function makeLink(srcId, dstId) {
+	return { source : srcId, target : dstId };
+}
+
+
+/** return map from node id to relative point locations */
+function getPoints(nodes) {
+	// clone nodes because d3 mutates them
+	let treeNodes = _.cloneDeep(nodes);
+
+	let layout = d3.layout.tree()
+	    .separation(() => 1)
+	    .children(d => d.children ? d.children.map(id => treeNodes[id]) : []);
+
+	// d3 add x, y properties to each node object
+	treeNodes = layout.nodes(getRoot(treeNodes));
+	let points = treeNodes.map(n => ( { id: n.id,
+	                                    x: n.x,
+	                                    y: n.y }));
+	// node position points keyed by node id
+	return _.keyBy(points, 'id');
 }
 
 
@@ -122,16 +123,16 @@ function classifyAppliedSampleSet(nodes, apSamples) {
 
 /** return samples classified by the tree nodes, both by path and by target */
 function classifySampleSet(nodes, samples) {
-	const ap_samples = applySampleSet(nodes, getRoot(nodes), samples);
-	const classified = classifyAppliedSampleSet(nodes, ap_samples);
+	const apSamples = applySampleSet(nodes, getRoot(nodes), samples);
+	const classified = classifyAppliedSampleSet(nodes, apSamples);
 	return { samples:  samples,
-	         byPath:   ap_samples,
+	         byPath:   apSamples,
 	         byTarget: classified };
 }
 
 
 /** return list of node ids giving path from root to given node */
-export function treeLineage(nodes, node) {
+function treeLineage(nodes, node) {
 	if (node.parent == undefined)
 		return [node.id];
 	return [...treeLineage(nodes, nodes[node.parent]), node.id];
