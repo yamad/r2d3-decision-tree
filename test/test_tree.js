@@ -2,15 +2,15 @@ import test from 'tape';
 
 import _ from 'lodash';
 import { makeDecisionTree, classifySampleSet } from '../src/tree.js';
-import { tree_data, tree_training_set } from '../src/tree-training-set-98.js';
+import { treeData, treeTrainingSet } from '../src/tree-training-set-98.js';
 
 test('A decision tree', (t) => {
-	t.ok(makeDecisionTree(tree_data),
+	t.ok(makeDecisionTree(treeData),
 	     "should construct successfully");
 
-	const dt = makeDecisionTree(tree_data);
-	const splits = dt.applySampleSet(tree_training_set);
-	t.ok(dt.applySampleSet(tree_training_set),
+	const dt = makeDecisionTree(treeData);
+	const splits = dt.applySamples(treeTrainingSet);
+	t.ok(dt.applySamples(treeTrainingSet),
 	    "should classify sample sets correctly");
 
 	t.end();
@@ -18,9 +18,8 @@ test('A decision tree', (t) => {
 
 
 test("Decorating samples spike", (t) => {
-	const tree = makeDecisionTree(tree_data);
-
-	let train_set = classifySampleSet(tree.nodes, tree_training_set);
+	const tree = makeDecisionTree(treeData);
+	let train_set = tree.classifySamples(treeTrainingSet);
 
 	_.forOwn(train_set.byPath, (samples, path_id) => {
 		samples.forEach(s => _.set(s, "path", parseInt(path_id))); });

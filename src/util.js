@@ -77,6 +77,7 @@ export const mapBy = (n, k, array, f) => {
 	return chunks.map(c => f(...c));
 };
 
+
 /** interleave elements of two arrays */
 export const interleave = (a, b) => {
 	if (a.length === 0)
@@ -189,9 +190,9 @@ export function angled_path_midpoint(src, dst, split_frac = 0.3) {
  * see http://www.redblobgames.com/grids/hexagons/#coordinates for
  * math
  */
-export function make_hex_lattice_rhombus(unit_width, unit_height, spacing,
-                                         base_x, base_y, origin="BOTTOM_LEFT",
-                                         orientation="SKEW_LEFT") {
+export function makeHexLatticeRhombus(unit_width, unit_height, spacing,
+                                      base_x, base_y, origin="BOTTOM_LEFT",
+                                      orientation="SKEW_LEFT") {
 	const size_x = (unit_width  + spacing) / 2;
 	const size_y = (unit_height + spacing) / 2;
 

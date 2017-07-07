@@ -1,7 +1,7 @@
 import React from 'react';
 import _ from 'lodash';
 
-import { progressArray, make_hex_lattice_rhombus, treePathPixels } from '../util.js';
+import { progressArray, makeHexLatticeRhombus, treePathPixels } from '../util.js';
 import { makeState, makeSelector } from '../state.js';
 
 import SampleSet from './SampleSet.jsx';
@@ -36,45 +36,56 @@ class DecisionTree extends React.Component {
 		const state = makeState();
 		const selector = makeSelector();
 
-		const x_scale = selector.xScale(state),
-		      y_scale = selector.yScale(state),
-		      tree_scale = selector.yTreeScale(state);
+		const xScale = selector.xScale(state),
+		      yScale = selector.yScale(state),
+		      yTreeScale = selector.yTreeScale(state);
 		const { width, height } = selector.canvasSize(state);
 
-		// add pixel point to each node
-		const attachPoint = (node) => {
-			const p = tree.points[node.id];
-			return { x : x_scale(p.x),
-			         y : tree_scale(p.y) };
-		};
-		const nodesToPoints = (nids) => nids.map(nid => attachPoint(tree.nodes[nid]));
-		const treePathsPoints = _.mapValues(tree.paths, nodesToPoints);
-		const treePathsPixels = _.mapValues(treePathsPoints,
-		                                    (path, id) => treePathPixels(path, tree.nodes[id].target, x_scale, y_scale, state));
+		const sampleProgress = progressArray(this.state.progress,
+										   samples.samples.length, 0.2);
 
-		// sample preparation
-		let treeProgress = progressArray(this.state.progress, samples.samples.length, 0.2);
+		// return the path in pixels to visit a list of nodes
+		function nodesToPixels(nodePath, isTarget) {
+			// return pixel point for a node
+			function nodeToPoint(nodeId) {
+				var p = tree.points[nodeId];
+				return { x : xScale(p.x),
+						 y : yTreeScale(p.y) };
+			};
 
-		const placeTargets = make_hex_lattice_rhombus(4, 4, 2, x_scale(0),
-		                                              y_scale(state.ui.extent.results_training.max)-5,
-		                                              "BOTTOM_LEFT",
-		                                              "SKEW_LEFT");
-		const placeNonTargets = make_hex_lattice_rhombus(4, 4, 2, x_scale(1),
-		                                                 y_scale(state.ui.extent.results_training.max)-5,
-		                                                 "BOTTOM_RIGHT",
-		                                                 "SKEW_RIGHT");
+			let points = nodePath.map(nid => nodeToPoint(nid));
+			return treePathPixels(points, isTarget,
+								  xScale, yScale, state);
+		}
 
+		// paths in screen coordinates for all paths/routes through tree
+		const pixelPaths = _.mapValues(tree.paths,
+									   (path, id) => nodesToPixels(path, tree.nodes[id].target));
+
+		// functions that give final pixel location in result set
+		const placeTargets = makeHexLatticeRhombus(
+			4, 4, 2, xScale(0),
+		    yScale(state.ui.extent.results_training.max)-5,
+		    "BOTTOM_LEFT",
+		    "SKEW_LEFT");
+		const placeNonTargets = makeHexLatticeRhombus(
+			4, 4, 2, xScale(1),
+		    yScale(state.ui.extent.results_training.max)-5,
+		    "BOTTOM_RIGHT",
+		    "SKEW_RIGHT");
+
+		// calculate full path for each sample
 		samples.byTarget['target'].forEach((s, i) => {
-			const row = i % 5;
-			const col = i / 5;
-			const result_p = placeTargets(row, col);
-			s.path = treePathsPixels[s.pathID].concat(result_p);
+			var row = i % 5;  // 5 rows
+			var col = i / 5;
+			var result_p = placeTargets(row, col);
+			s.path = [...pixelPaths[s.pathID], result_p];
 		});
 		samples.byTarget['nontarget'].forEach((s, i) => {
-			const row = i % 5;
-			const col = i / 5;
-			const result_p = placeNonTargets(row, col);
-			s.path = treePathsPixels[s.pathID].concat(result_p);
+			var row = i % 5;  // 5 rows
+			var col = i / 5;
+			var result_p = placeNonTargets(row, col);
+			s.path = [...pixelPaths[s.pathID], result_p];
 		});
 
 		return (
@@ -86,19 +97,21 @@ class DecisionTree extends React.Component {
 								  state={state} selector={selector} />
 					<TreeLeafList leaves={_.values(tree.leaves)} tree={tree}
 								  state={state} selector={selector} />
-					<TreePathList paths={treePathsPixels}
+					<TreePathList paths={pixelPaths}
 								  state={state} />
 				  </g>
 				  <g className="tree-results">
 					<ClassifierResults
 					  width={width}
 					  x="0"
-					  y={y_scale(state.ui.extent.results_training.max)}
+					  y={yScale(state.ui.extent.results_training.max)}
 					  samples={samples.samples}
-					  progress={treeProgress} />
+					  progress={sampleProgress} />
 				  </g>
 				  <g> className="sample-sets">
-					<SampleSet samples={samples.samples} progresses={treeProgress} name="training" />
+					<SampleSet samples={samples.samples}
+							   progresses={sampleProgress}
+							   name="training" />
 				  </g>
 				</svg>
 				</div>
@@ -118,7 +131,7 @@ class DecisionTree extends React.Component {
 	}
 
 	_tick(prev) {
-		let fps = 1000 / (FPS || 60);
+		var fps = 1000 / (FPS || 60);
 		return { progress: prev.progress + 0.004,
 				 interval: setTimeout(() => requestAnimationFrame(this.tick), fps)
 			   };

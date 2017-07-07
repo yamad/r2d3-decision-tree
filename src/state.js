@@ -1,7 +1,7 @@
 /**
  * Application state for decision tree diagram
  *
- * This module defines all relevant state for the application. It
+ * This module defines UI state and config for the application. It
  * supports the one-way information flow in React/Redux designs,
  * although Redux is not actually used (yet).
  */
@@ -11,12 +11,6 @@ import d3 from 'd3';
 
 
 const initialState = {
-	tree: {
-		nodes: {}
-	},
-	samples: [],
-	sample_sets: {},
-
 	ui: {
 		sample_hover_id: null,
 		tree_node_hover_id: null,
@@ -24,10 +18,10 @@ const initialState = {
 		sample_radius: 1.8,
 		tree_offset: 7,
 		points: {
-			start:         { x:    0, y:   0 },
-			end_path:      { x: null, y: 0.7 },
-			end_target:    { x: 0.25, y: 0.8 },
-			end_nontarget: { x: 0.75, y: 0.8 }
+			start:         { x:    0, y:   0  },
+			end_path:      { x: null, y: 0.72 },
+			end_target:    { x: 0.25, y: 0.8  },
+			end_nontarget: { x: 0.75, y: 0.8  }
 		},
 		extent: {
 			tree: { min: 0.06, max: 0.7 },
@@ -63,18 +57,11 @@ export function makeState() {
  */
 export function makeSelector() {
 	let s = {
-		treeNodes	 : state => state.tree.nodes,
-		samples		 : state => state.samples,
-		sampleSets	 : state => state.samples_sets,
 		canvasSize	 : state => state.ui.canvas.size,
 		treeExtent	 : state => state.ui.extent.tree,
 		canvasMargin : state => state.ui.canvas.margin
 	};
 
-	s.treeLeaves  = createSelector([ s.treeNodes ], treeLeaves);
-	s.treePaths   = createSelector([ s.treeLeaves,
-	                                 s.treeNodes ], treePaths);
-	s.treeLinks   = createSelector([ s.treeNodes ], treeLinks);
 	s.xScale      = createSelector([ s.canvasSize,
 	                                 s.canvasMargin ], xScale);
 	s.yScale      = createSelector([ s.canvasSize,
@@ -113,35 +100,4 @@ function yTreeScale(size, margin, extent) {
 		.domain([0, 1])
 		.range([extent.min * size.height,
 		        extent.max * size.height]);
-}
-
-
-/** return array of all node links in tree */
-function treeLinks(nodes) {
-	return d3.layout.tree().links(nodes);
-}
-
-
-/** return array of all leaf (terminal) nodes */
-function treeLeaves(nodes) {
-	if (!nodes)
-		return [];
-	return _.filter(_.values(nodes), n => isLeaf(n));
-}
-
-
-/** return path from root to node id */
-function treeLineage(nodes, id) {
-	const n = nodes[id];
-	if (n.parent == null)
-		return [n];
-	return treeLineage(nodes, n.parent).concat(n);
-};
-
-
-/** return path through tree to reach every leaf node */
-function treePaths(leaves, nodes) {
-	if (!leaves || leaves.length < 1)
-		return [];
-	return leaves.map(n => treeLineage(nodes, n.id));
 }

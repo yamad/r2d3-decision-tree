@@ -3,20 +3,22 @@ import ReactDOM from 'react-dom';
 import _ from 'lodash';
 import DecisionTree from './components/DecisionTree.jsx';
 
-import { tree_data, tree_training_set } from './tree-training-set-98.js';
-import { makeDecisionTree, classifySampleSet } from './tree.js';
+import { treeData, treeTrainingSet } from './tree-training-set-98.js';
+import { makeDecisionTree } from './tree.js';
 
-const tree = makeDecisionTree(tree_data);
-let train_set = classifySampleSet(tree.nodes, tree_training_set);
+let tree = makeDecisionTree(treeData),
+    trainSet = tree.classifySamples(treeTrainingSet);
 
-_.forOwn(train_set.byPath, (samples, path_id) => {
-	samples.forEach(s => _.set(s, "pathID", parseInt(path_id))); });
-_.forEach(train_set.byTarget['target'], s => s.isTarget = true);
-_.forEach(train_set.byTarget['nontarget'], s => s.isTarget = false);
+// decorate samples (the tree does not mutate the samples at all)
+_.forOwn(trainSet.byPath, (samples, path_id) =>
+         samples.forEach(s => s["pathID"] = Number(path_id)));
+trainSet.byTarget['target'].forEach(s => s.isTarget = true);
+trainSet.byTarget['nontarget'].forEach(s => s.isTarget = false);
 
-train_set.samples = _.shuffle(_.flatten(_.values(train_set.byTarget)));
-train_set.byTarget['target'] = _.filter(train_set.samples, s => s.isTarget);
-train_set.byTarget['nontarget'] = _.filter(train_set.samples, s => !s.isTarget);
+// random shuffle and resort, for aesthetics
+trainSet.samples = _.shuffle(_.flatten(_.values(trainSet.byTarget)));
+trainSet.byTarget['target'] = trainSet.samples.filter(s => s.isTarget);
+trainSet.byTarget['nontarget'] = trainSet.samples.filter(s => !s.isTarget);
 
-ReactDOM.render(<DecisionTree tree={tree} samples={train_set} />,
+ReactDOM.render(<DecisionTree tree={tree} samples={trainSet} />,
                 document.getElementById('main'));

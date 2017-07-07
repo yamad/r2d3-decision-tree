@@ -69,7 +69,7 @@ const deriveObject = (dst, src) => {
 // 'children' attribute, as shown in `tree_data` of
 // `tree-training-set-98.js` file. all functions operate on
 // denormalized data.
-export function clean_r2d3_tree_data(raw) {
+export function cleanRawR2D3Tree(raw) {
 	const isLeaf = (n) => n.children == undefined;
 	const isRoot = (n) => n.parent == undefined;
 
