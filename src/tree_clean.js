@@ -53,12 +53,15 @@ const deriveObject = (dst, src) => {
 // `tree-training-set-98.js` file. all functions operate on
 // denormalized data.
 export function cleanRawR2D3Tree(raw) {
-	const isLeaf = (n) => n.children == undefined;
+	const isLeaf = (n) => n.children == undefined || n.children.length === 0;
 	const isRoot = (n) => n.parent == undefined;
 
 	// flatten embedded child nodes into a list
 	const flattenTree = (root) => {
-		if (isLeaf(root)) return [root];
+		if (isLeaf(root)) {
+			root.children = [];
+			return [root];
+		}
 
 		// more to do. recurse through children
 		const assignParent = (n) => Object.assign({ parent : root}, n);
