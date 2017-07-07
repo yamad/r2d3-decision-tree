@@ -105,7 +105,7 @@ test('chunkBy', (t) => {
 });
 
 
-test("intercalate", (t) => {
+test("interleave", (t) => {
 	t.deepEqual([], interleave([], []),
 	            "Given two empty arrays, return 1 array");
 

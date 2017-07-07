@@ -14,8 +14,7 @@ export const getLeaves = (nodes) => _.pickBy(nodes, isLeaf);
 export const getPaths  = (nodes) => _.mapValues(getLeaves(nodes),
                                                 _.curry(treeLineage)(nodes));
 
-const toId           = (a) => a.id;
-const mapToId        = (nodes) => _.map(nodes, toId);
+const mapToId        = (nodes) => _.map(nodes, a => a.id);
 const splitOnTarget  = (nodes) => _.partition(nodes, (n) => n.target);
 
 const makeLink = ( src_id, dst_id ) => {
@@ -27,7 +26,7 @@ const findPoints = (nodes) => {
 	const clone_nodes = _.cloneDeep(nodes);
 	const layout = d3.layout.tree()
 		      .separation(() => 1)
-		      .children((d) => _.map(d.children, (a) => clone_nodes[a]));
+	      .children(d => d.children ? d.children.map(a => clone_nodes[a]) : []);
 
 	const tree_nodes = layout.nodes(getRoot(clone_nodes)); // destructive change!
 

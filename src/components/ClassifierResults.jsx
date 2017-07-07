@@ -1,20 +1,17 @@
 import React from 'react';
-import _ from 'lodash';
-
-import { make_hex_lattice_rhombus } from '../util.js';
 
 const ClassifierAccuracy = ({ width, accuracy }) =>
-	<g className="classifer-accuracy">
-	      <text x={width * 0.5} y="-28" className="accuracy-label">Training Accuracy</text>
-	      <text x={width * 0.5} y="-8"  className="accuracy-value">{accuracy}%</text>
-	 </g>;
+	  <g className="classifer-accuracy">
+	  <text x={width * 0.5} y="-28" className="accuracy-label">Training Accuracy</text>
+	  <text x={width * 0.5} y="-8"  className="accuracy-value">{accuracy}%</text>
+	  </g>;
 
 const ClassifierFraction = ({ x, correct, total, targetclass }) =>
-	      <g className={"classifier-fraction "+targetclass}>
-	      <text x={x-3} y="-8" textAnchor="end">{correct}</text>
-	      <text x={x}   y="-8" fill="black" textAnchor="middle">/</text>
-	      <text x={x+3} y="-8" textAnchor="start">{total}</text>
-	      </g>;
+	  <g className={"classifier-fraction "+targetclass}>
+	  <text x={x-3} y="-8" textAnchor="end">{correct}</text>
+	  <text x={x}   y="-8" fill="black" textAnchor="middle">/</text>
+	  <text x={x+3} y="-8" textAnchor="start">{total}</text>
+	  </g>;
 
 const ClassifierResults = ({ width, x, y, samples, progress }) => {
 	let target_total = 0;
@@ -46,6 +43,5 @@ const ClassifierResults = ({ width, x, y, samples, progress }) => {
 		  <rect className="classifier-base" />
 		</g>);
 };
-
 
 export default ClassifierResults;

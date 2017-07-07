@@ -2,8 +2,8 @@
  * Application state for decision tree diagram
  *
  * This module defines all relevant state for the application. It
- * supports the one-way information flow of the usual React/Redux
- * pair, although Redux is not actually used (yet).
+ * supports the one-way information flow in React/Redux designs,
+ * although Redux is not actually used (yet).
  */
 import _ from 'lodash';
 import { createSelector } from 'reselect';

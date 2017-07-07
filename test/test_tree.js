@@ -21,7 +21,6 @@ test("Decorating samples spike", (t) => {
 	const tree = makeDecisionTree(tree_data);
 
 	let train_set = classifySampleSet(tree.nodes, tree_training_set);
-	debugger;
 
 	_.forOwn(train_set.byPath, (samples, path_id) => {
 		samples.forEach(s => _.set(s, "path", parseInt(path_id))); });

@@ -40,12 +40,23 @@ const makeLeafNode = () => ({
 	children:      undefined  // descendant tree nodes, ids
 });
 
-// assign values from source object to destination object, for all
-// (shallow) attributes that exist in both.
+/**
+ * assign values from source object to destination object, for all
+ * (shallow) properties that exist in both.
+ *
+ * Compare to the builtin Object.assign(dst, src), which copies over
+ * all properties on src into dst. By contrast, `deriveObject` does
+ * not add any new properties to dst. It just assigns the value from
+ * src to dst, when a property in dst also exists in src.
+ *
+ * The idea is to create a clean object from a more complicated one by
+ * just asking for the properties you care about.
+ */
 const deriveObject = (dst, src) => {
-	_.forIn(dst, (value, key) => {
-		if (_.has(src, key)) dst[key] = src[key];
-	});
+	for (var key in dst) {
+		if (dst.hasOwnProperty(key) && src.hasOwnProperty(key))
+			dst[key] = src[key];
+	}
 	return dst;
 };
 
@@ -137,10 +148,14 @@ export function clean_r2d3_tree_data(raw) {
 	};
 
 	// in-place mutations
-	let tree = _.assign({}, raw);
+	let tree = Object.assign({}, raw);
 	tree = flattenTree(tree);		// make list, always first step
 	tree = tree.map(addType);
 	tree = tree.map(transformNode);
 	tree = tree.map(normalizeNode); // normalize, always last step
-	return _.keyBy(tree, 'id');
+	// return object: id -> node
+	return tree.reduce((obj, node) => {
+		obj[node.id] = node;
+		return obj;
+	}, {});
 };

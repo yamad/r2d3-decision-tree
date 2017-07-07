@@ -1,5 +1,4 @@
 import React from 'react';
-import d3 from 'd3';
 import { pointsToSVGLinePath } from '../util.js';
 
 /* A Sample represents one example/unit in a dataset */

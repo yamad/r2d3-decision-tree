@@ -94,12 +94,9 @@ export function treePathPixels(path, isTarget, xscale, yscale, state) {
 	const tree_dst = { 'x': path[path.length-1].x,
 	                   'y': yscale(state.ui.points.end_path.y) };
 
-	let result_point;
-	if (isTarget) result_point = state.ui.points.end_target;
-	else          result_point = state.ui.points.end_nontarget;
-
-	const result_src = { x: xscale(result_point.x),
-	                     y: yscale(result_point.y) };
+	let result_point = state.ui.points[isTarget ? "end_target" : "end_nontarget"],
+	    result_src = { x: xscale(result_point.x),
+	                   y: yscale(result_point.y) };
 
 	// add midpoints
 	const midpts = mapBy(2, 1, path, (a, b) => angled_path_midpoint(a, b));
@@ -115,8 +112,8 @@ export function treePathPixels(path, isTarget, xscale, yscale, state) {
  *
  * @param src         source point      (needs x, y attributes)
  * @param dst         destination point (needs x, y attributes)
- * @param x_scaler    conversion function for x scale, usually from d3.scale
- * @param y_scaler    conversion function for y scale, usually from d3.scale
+ * @param x_scale     conversion function for x scale, usually from d3.scale
+ * @param y_scale     conversion function for y scale, usually from d3.scale
  * @param offset      optional offset (in scaled units), positive is 'smaller'
  * @param split_frac  where to split vertical length for diag/vert parts
  *
@@ -151,27 +148,27 @@ export function treePathPixels(path, isTarget, xscale, yscale, state) {
  * of one leg of a right triangle for which we know an angle and the
  * length of its opposite leg.
  */
-export function link_angled_path(src, dst, x_scaler, y_scaler, offset=0, split_frac=0.3) {
-	/* original/unscaled points -- A, B and M */
-	let pa = { 'x': x_scaler(src.x), 'y': y_scaler(src.y) },
-	    pb = { 'x': x_scaler(dst.x), 'y': y_scaler(dst.y) },
+export function link_angled_path(src, dst, x_scale, y_scale, offset=0, split_frac=0.3) {
+	// original/unscaled points -- A, B and M
+	let pa = { 'x': x_scale(src.x), 'y': y_scale(src.y) },
+	    pb = { 'x': x_scale(dst.x), 'y': y_scale(dst.y) },
 	    pm = angled_path_midpoint(pa, pb, split_frac);
 
 	if (offset != 0) {
-		/* correct signs */
+		// correct signs
 		const xoff = (pb.x - pa.x) > 0 ? -offset : +offset,
 		      yoff = (pa.y - pb.y) > 0 ? -offset : +offset;
 
-		/* triangle with hypoteneuse A-M */
+		// triangle with hypoteneuse A-M
 		const pm_dx = pm.x - pa.x,
 		      pm_dy = pm.y - pa.y,
-		      theta = Math.atan(pm_dx/pm_dy); /* angle wrt center */
+		      theta = Math.atan(pm_dx/pm_dy); // angle wrt center
 
-		/* calculate offset points */
+		// calculate offset points
 		pa.y += yoff;
 		pb.x += xoff;
 		pm.x = pb.x;
-		/* find y in offset traingle to maintain angle theta */
+		// find y in offset traingle to maintain angle theta */
 		pm.y = pa.y + ((pb.x - pa.x) / Math.tan(theta));
 	}
 
