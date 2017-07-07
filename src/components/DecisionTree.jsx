@@ -1,45 +1,33 @@
 import React from 'react';
 import _ from 'lodash';
 
-import { link_angled_path, progressArray, mapBy, interleave, angled_path_midpoint, make_hex_lattice_rhombus } from '../util.js';
+import { progressArray, make_hex_lattice_rhombus, treePathPixels } from '../util.js';
 import { makeState, makeSelector } from '../state.js';
 
 import SampleSet from './SampleSet.jsx';
-import TreePath from './TreePath.jsx';
+import { TreePathList } from './TreePath.jsx';
+import { TreeLinkList } from './TreeLink.jsx';
+import { TreeLeafList } from './TreeLeaf.jsx';
 import ClassifierResults from './ClassifierResults.jsx';
 
 const FPS = 20;
 
-function treePathPixels(path, isTarget, xscale, yscale, state) {
-	const tree_src = { 'x': path[0].x,
-	                   'y': path[0].y - 10 };
-	const tree_dst = { 'x': _.last(path).x,
-	                   'y': yscale(state.ui.points.end_path.y) };
 
-	let result_point;
-	if (isTarget) result_point = state.ui.points.end_target;
-	else          result_point = state.ui.points.end_nontarget;
-
-	const result_src = { x: xscale(result_point.x),
-	                     y: yscale(result_point.y) };
-
-	// add midpoints
-	const midpts = mapBy(2, 1, path, (a, b) => angled_path_midpoint(a, b));
-	const tree_path = interleave(path, midpts);
-
-	// construct entire path
-	const full_path = [tree_src].concat(tree_path)
-		      .concat([tree_dst, result_src]);
-	return full_path;
-}
-
-/* A DecisionTree draws a binary classification decision tree */
+/** A DecisionTree draws a binary classification decision tree */
 class DecisionTree extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = { progress: 0,
-		               interval: null };
+		this.state = this.inital_state();
+
 		this.tick = this.tick.bind(this);
+		this.startstop = this.startstop.bind(this);
+		this.reset = this.reset.bind(this);
+	}
+
+	inital_state() {
+		return { progress: 0,
+			     interval: null,
+			     animating: false };
 	}
 
 	render() {
@@ -53,67 +41,29 @@ class DecisionTree extends React.Component {
 		      tree_scale = selector.yTreeScale(state);
 		const { width, height } = selector.canvasSize(state);
 
-		// add calculated point to each node
-		const nodeToPoint = (node) => {
+		// add pixel point to each node
+		const attachPoint = (node) => {
 			const p = tree.points[node.id];
 			return { x : x_scale(p.x),
 			         y : tree_scale(p.y) };
 		};
-		const nodesToPoints = (nids) => nids.map(nid => nodeToPoint(tree.nodes[nid]));
+		const nodesToPoints = (nids) => nids.map(nid => attachPoint(tree.nodes[nid]));
 		const treePathsPoints = _.mapValues(tree.paths, nodesToPoints);
 		const treePathsPixels = _.mapValues(treePathsPoints,
-		                              (path, id) => treePathPixels(path, tree.nodes[id].target, x_scale, y_scale, state));
+		                                    (path, id) => treePathPixels(path, tree.nodes[id].target, x_scale, y_scale, state));
 
-		const TreeLeaf = ({ leaf }) => {
-			let x = x_scale(tree.points[leaf.id].x);
-			let y = tree_scale(tree.points[leaf.id].y) - 14;
-
-			if (leaf.type === 'LEFT')  x += state.ui.tree_offset-1;
-			if (leaf.type === 'RIGHT') x -= state.ui.tree_offset+1;
-			const tclass = leaf.target ? "target" : "nontarget";
-
-			return (<rect x={x} y={y}
-			        className={"leaf "+ tclass} /> );
-		};
-
-		const TreeLink = ({ src, dst }) => {
-			var d1 = link_angled_path(src, dst, x_scale, tree_scale, state.ui.tree_offset);
-			return (
-				<g>
-				  <path d={d1} className="tree-link" />
-				</g>
-			);
-		};
-
-		const TreePathList = ({ paths }) =>
-			<g className="paths">
-				{_.map(paths, (p, id) => <TreePath key={"path-"+id} id={id} path={p} /> )}
-			</g>;
-
-		const TreeLinkList = ({ links }) =>
-			      <g className="links">
-			      {links.map(l => <TreeLink key={l.source+"-"+l.target}
-			                 src={tree.points[l.source]}
-			                 dst={tree.points[l.target]} />)}
-		</g>;
-
-		const TreeLeafList = ({ leaves }) =>
-			      <g className="leaves">
-			      {leaves.map(l => <TreeLeaf key={"leaf-"+l.id} leaf={l} />)}
-		</g>;
 		// sample preparation
 		let treeProgress = progressArray(this.state.progress, samples.samples.length, 0.2);
 
-		const placementOrigin = "BOTTOM_LEFT";
-		const placementOrient = "SKEW_LEFT";
 		const placeTargets = make_hex_lattice_rhombus(4, 4, 2, x_scale(0),
-		                                              y_scale(state.ui.extent.results_training.max) - 5,
-		                                              placementOrigin,
-		                                              placementOrient);
+		                                              y_scale(state.ui.extent.results_training.max)-5,
+		                                              "BOTTOM_LEFT",
+		                                              "SKEW_LEFT");
 		const placeNonTargets = make_hex_lattice_rhombus(4, 4, 2, x_scale(1),
-		                                                 y_scale(state.ui.extent.results_training.max) - 5,
+		                                                 y_scale(state.ui.extent.results_training.max)-5,
 		                                                 "BOTTOM_RIGHT",
 		                                                 "SKEW_RIGHT");
+
 		samples.byTarget['target'].forEach((s, i) => {
 			const row = i % 5;
 			const col = i / 5;
@@ -128,37 +78,79 @@ class DecisionTree extends React.Component {
 		});
 
 		return (
-			<svg width={width} height={height}>
-			  <g className="decision-tree">
-				<TreeLinkList links={_.values(tree.links)} />
-				<TreeLeafList leaves={_.values(tree.leaves)} />
-				<TreePathList paths={treePathsPixels} />
-			  </g>
-			  <g className="tree-results">
-				<ClassifierResults width={width} x="0" y={y_scale(state.ui.extent.results_training.max)} samples={samples.samples} progress={treeProgress} />
-			  </g>
-			  <g> className="sample-sets">
-				<SampleSet samples={samples.samples} progresses={treeProgress} name="training" />
-			  </g>
-			</svg>
+			<div>
+			  <div id="fullsvg">
+				<svg width={width} height={height}>
+				  <g className="decision-tree">
+					<TreeLinkList links={_.values(tree.links)} tree={tree}
+								  state={state} selector={selector} />
+					<TreeLeafList leaves={_.values(tree.leaves)} tree={tree}
+								  state={state} selector={selector} />
+					<TreePathList paths={treePathsPixels}
+								  state={state} />
+				  </g>
+				  <g className="tree-results">
+					<ClassifierResults
+					  width={width}
+					  x="0"
+					  y={y_scale(state.ui.extent.results_training.max)}
+					  samples={samples.samples}
+					  progress={treeProgress} />
+				  </g>
+				  <g> className="sample-sets">
+					<SampleSet samples={samples.samples} progresses={treeProgress} name="training" />
+				  </g>
+				</svg>
+				</div>
+				<div>
+				  <button id="go">
+					{!this.state.animating ? 'Start' : 'Stop'}
+				  </button>
+				  <button id="reset">Reset</button>
+				</div>
+			  </div>
 		);
 	}
 
 	tick() {
-		let fps = 1000 / (FPS || 60);
+		if (this.state.animating)
+			this.setState((prev) => this._tick(prev));
+	}
 
-		this.setState({
-			progress: this.state.progress + 0.004,
-			interval: this.state.progress < 1 ? setTimeout(_ => requestAnimationFrame(this.tick), fps) : null
-		});
+	_tick(prev) {
+		let fps = 1000 / (FPS || 60);
+		return { progress: prev.progress + 0.004,
+				 interval: setTimeout(() => requestAnimationFrame(this.tick), fps)
+			   };
+	}
+
+	startstop() {
+		if (this.state.animating)
+			this.setState({ animating: false,
+						    interval: null });
+		else {
+			this.setState(
+				(prev) => Object.assign({ animating: true }, this._tick(prev)));
+		}
+	}
+
+	reset() {
+		this.setState(this.inital_state());
 	}
 
 	componentDidMount() {
 		window.addEventListener('keydown', (evt) => this.onKeyDown(evt));
+		document.getElementById('go')
+			.addEventListener('click', this.startstop);
+		document.getElementById('reset')
+			.addEventListener('mousedown', this.reset);
+		document.getElementById('fullsvg')
+			.addEventListener('mousedown', this.startstop);
 	}
 
 	onKeyDown(evt) {
-		evt.keyCode === 32 && this.tick();
+		evt.keyCode === 32 && this.startstop(); // spacebar
+		evt.keyCode === 13 && this.reset();     // return
 	}
 }
 
