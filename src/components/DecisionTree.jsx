@@ -42,7 +42,7 @@ class DecisionTree extends React.Component {
 		const { width, height } = selector.canvasSize(state);
 
 		const sampleProgress = progressArray(this.state.progress,
-										   samples.samples.length, 0.2);
+											 samples.samples.length, 0.2);
 
 		// return the path in pixels to visit a list of nodes
 		function nodesToPixels(nodePath, isTarget) {
@@ -114,14 +114,14 @@ class DecisionTree extends React.Component {
 							   name="training" />
 				  </g>
 				</svg>
-				</div>
-				<div>
-				  <button id="go">
-					{!this.state.animating ? 'Start' : 'Stop'}
-				  </button>
-				  <button id="reset">Reset</button>
-				</div>
 			  </div>
+			  <div id="buttons">
+				<button id="go">
+				  {!this.state.animating ? 'Start' : 'Stop'}
+				</button>
+				<button id="reset">Reset</button>
+			  </div>
+			</div>
 		);
 	}
 

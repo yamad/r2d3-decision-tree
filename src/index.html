@@ -4,62 +4,80 @@
     <meta charset="UTF-8">
     <title>Decision Tree</title>
     <style>
-      body {
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: 18pt;
-      }
+     body {
+         font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         font-size: 18pt;
+     }
 
-      rect.leaf {
-          width: 2px;
-          height: 14px;
-      }
+     #main {
+         width: 600px;
+         margin: 30px auto 0 auto;
+     }
 
-      path {
-          fill: none;
-      }
+     rect.leaf {
+         width: 2px;
+         height: 14px;
+     }
 
-      path.tree-path {
-          stroke: none;
-      }
+     path {
+         fill: none;
+     }
 
-      path.tree-link {
-          stroke: gray;
-          stroke-width: 1;
-      }
+     path.tree-path {
+         stroke: none;
+     }
 
-      path.sample-path {
-          stroke: none;
-      }
+     path.tree-link {
+         stroke: gray;
+         stroke-width: 1;
+     }
 
-      rect.classifier-base {
-          height: 1px;
-          fill: #aaaaaa;
-          width: 100%;
-      }
+     path.sample-path {
+         stroke: none;
+     }
 
-      text.accuracy-label {
-          font-size: 9px;
-          text-anchor: middle;
-      }
+     rect.classifier-base {
+         height: 1px;
+         fill: #aaaaaa;
+         width: 100%;
+     }
 
-      text.accuracy-value {
-          font-size: 18px;
-          text-anchor: middle;
-      }
+     text.accuracy-label {
+         font-size: 9px;
+         text-anchor: middle;
+     }
 
-      .classifier-fraction {
-          font-size:16px;
-      }
+     text.accuracy-value {
+         font-size: 18px;
+         text-anchor: middle;
+     }
 
-      .target {
-          color: rgb(16, 70, 131);
-          fill: rgb(16, 70, 131);
-      }
+     .classifier-fraction {
+         font-size:16px;
+     }
 
-      .nontarget {
-          color: rgb(65, 153, 43);
-          fill: rgb(65, 153, 43);
-      }
+     .target {
+         color: rgb(16, 70, 131);
+         fill: rgb(16, 70, 131);
+     }
+
+     .nontarget {
+         color: rgb(65, 153, 43);
+         fill: rgb(65, 153, 43);
+     }
+
+     div#buttons {
+         margin-left: 20px;
+     }
+
+     button {
+         padding: 10px 30px;
+         font-size: 12px;
+         margin: 0 5px;
+         border-radius: 8px;
+         background-color: transparent;
+         border: 1px solid #bbb;
+     }
 
     </style>
   </head>
