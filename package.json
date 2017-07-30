@@ -9,7 +9,9 @@
 		"start": "npm run open-src",
 		"open-src": "babel-node tools/srcServer.js",
 		"open-dist": "babel-node tools/distServer.js",
-		"build": "babel-node tools/build.js && npm run open-dist",
+		"clean-dist": "rm -rf ./dist && mkdir dist",
+		"prebuild": "npm run clean-dist && npm run test",
+		"build": "npm run build-html && babel-node tools/build.js && npm run open-dist",
 		"build-html": "babel-node tools/buildHtml.js",
 		"deploy": "cd dist && git add --all && git commit -m \"Release at $(date)\" && git push"
 	},
