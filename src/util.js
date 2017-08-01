@@ -15,7 +15,7 @@ function assert(test, message) {
  *
  * see section 8 of SVG spec
  */
-export const pointsToSVGLinePath = (points) => {
+export function pointsToSVGLinePath(points) {
 	if (points.length < 1)
 		return '';
 
@@ -33,7 +33,7 @@ export const pointsToSVGLinePath = (points) => {
  * like lodash's `chunk` but allows for overlapping groups for, say,
  * moving window averaging.
  */
-export const chunkBy = (n, k, array) => {
+export function chunkBy(n, k, array) {
 	if (k <= 0)             return [];
 	if (array.length === 0) return [];
 	if (array.length < n)   return [array];
@@ -54,7 +54,7 @@ export const chunkBy = (n, k, array) => {
  *  mapBy(2, 2, [1,2,3,4], (a, b) => a + b)  --> [3,7]
  *  mapBy(2, 1, [1,2,3,4], (a, b) => a + b)  --> [3,5,7]
  */
-export const mapBy = (n, k, array, f) => {
+export function mapBy(n, k, array, f) {
 	if (array.length < n)
 		return [];
 	const chunks = chunkBy(n, k, array).filter(c => c.length === n);
@@ -63,7 +63,7 @@ export const mapBy = (n, k, array, f) => {
 
 
 /** interleave elements of two arrays */
-export const interleave = (a, b) => {
+export function interleave(a, b) {
 	if (a.length === 0)
 		return b;
 	if (b.length === 0)
