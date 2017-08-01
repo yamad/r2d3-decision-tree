@@ -20,8 +20,8 @@ export function pointsToSVGLinePath(points) {
 		return '';
 
 	// 'M' followed by >1 points have implicit 'L' commands between points
-	const pathSegment = (p) => ' ' + p.x + ' ' + p.y;
-	return ["M", ...points.map(pathSegment)].join("");
+	const pathSegment = (p) => p.x + ' ' + p.y;
+	return ['M', ...points.map(pathSegment)].join(' ');
 };
 
 
